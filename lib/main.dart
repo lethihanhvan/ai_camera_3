@@ -33,37 +33,35 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String? _imagePath;
-  List<Rect>? _faceRects;
-  int? _imageWidth;
-  int? _imageHeight;
+  // String? _imagePath;
+  // List<Rect>? _faceRects;
+  // int? _imageWidth;
+  // int? _imageHeight;
 
   List<FaceImageDTO> _faceImages = [];
 
-
-
-  Future<void> _openCamera() async {
-    // Push CameraScreen and wait for the captured photo path
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const CameraScreen()),
-    );
-
-    if (result != null && mounted) {
-      setState(() => _imagePath = result);
-
-      // Get original image dimensions
-      final decodedImage = await decodeImageFromList(File(result).readAsBytesSync());
-      setState(() {
-        _imageWidth = decodedImage.width;
-        _imageHeight = decodedImage.height;
-      });
-
-      // Detect faces and get bounding boxes
-      List<Rect> rects = await detectFaces(result);
-      setState(() => _faceRects = rects);
-    }
-  }
+  // Future<void> _openCamera() async {
+  //   // Push CameraScreen and wait for the captured photo path
+  //   final result = await Navigator.push(
+  //     context,
+  //     MaterialPageRoute(builder: (_) => const CameraScreen()),
+  //   );
+  //
+  //   if (result != null && mounted) {
+  //     setState(() => _imagePath = result);
+  //
+  //     // Get original image dimensions
+  //     final decodedImage = await decodeImageFromList(File(result).readAsBytesSync());
+  //     setState(() {
+  //       _imageWidth = decodedImage.width;
+  //       _imageHeight = decodedImage.height;
+  //     });
+  //
+  //     // Detect faces and get bounding boxes
+  //     List<Rect> rects = await detectFaces(result);
+  //     setState(() => _faceRects = rects);
+  //   }
+  // }
 
   Future<void> _openImagePickers() async {
     final List<AssetEntity>? result = await AssetPicker.pickAssets(
@@ -93,6 +91,10 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
+    setState(() {
+      _faceImages = faceImages;
+    });
+
   }
 
   @override
@@ -104,15 +106,28 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (_imagePath != null && _imageWidth != null && _imageHeight != null)
-              FaceImagePreview(
-                imagePath: _imagePath!,
-                faceRects: _faceRects ?? [],
-                imageWidth: _imageWidth!,
-                imageHeight: _imageHeight!,
-              )
-            else
-              const Text('No image captured'),
+            // if (_imagePath != null && _imageWidth != null && _imageHeight != null)
+            //   FaceImagePreview(
+            //     imagePath: _imagePath!,
+            //     faceRects: _faceRects ?? [],
+            //     imageWidth: _imageWidth!,
+            //     imageHeight: _imageHeight!,
+            //   )
+            // else
+            //   const Text('No image captured'),
+
+            if (_faceImages.isNotEmpty)
+              Column(
+                children: [
+                  ..._faceImages.map((faceImage) => FaceImagePreview(
+                    imagePath: faceImage.imagePath!,
+                    faceRects: faceImage.faceRects!,
+                    imageWidth: faceImage.imageWidth!,
+                    imageHeight: faceImage.imageHeight!,
+                  )).toList()
+                ],
+              ),
+
 
 
 
@@ -121,11 +136,11 @@ class _HomePageState extends State<HomePage> {
               onPressed: _openImagePickers,
               child: const Text('Pick Images'),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _openCamera,
-              child: const Text('Open Camera'),
-            ),
+            // const SizedBox(height: 20),
+            // ElevatedButton(
+            //   onPressed: _openCamera,
+            //   child: const Text('Open Camera'),
+            // ),
           ],
         ),
       ),
