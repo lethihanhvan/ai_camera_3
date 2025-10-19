@@ -6,6 +6,12 @@ plugins {
 }
 
 android {
+
+    aaptOptions {
+        noCompress("tflite")
+        noCompress("lite")
+    }
+
     namespace = "com.van.camera.ai_camera"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion

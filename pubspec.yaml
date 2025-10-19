@@ -50,7 +50,10 @@ dev_dependencies:
   image: ^4.2.0         # For image manipulation (optional)
   path_provider: ^2.0.15 # To save captured images
   image_picker: ^1.0.4  # To pick images from gallery
-  tflite_flutter: ^0.10.0 # For TensorFlow Lite model inference
+  tflite_flutter: ^0.11.0 # For TensorFlow Lite model inference
+#  tflite_flutter:
+#    path: ./tflite_flutter-0.6.0
+#  tflite_flutter: 0.7.0
   wechat_assets_picker: ^9.8.0
 
 # For information on the generic Dart part of this file, see the
@@ -66,7 +69,8 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-     - assets/mobilefacenet.tflite
+    - assets/mobilefacenet.tflite
+    - assets/tan.txt
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
