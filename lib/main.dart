@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:ai_camera/utils/face_utils.dart';
@@ -95,13 +96,13 @@ class _HomePageState extends State<HomePage> {
       // String test = await rootBundle.loadString('assets/tan.txt');
 
       // Load model bytes from asset
-      final data = await rootBundle.load('assets/mobilefacenet.tflite');
+      final dataModelFile = await rootBundle.load('assets/mobilefacenet.tflite');
 
       // Write them to a temporary file
       final tempDir = await getApplicationDocumentsDirectory();
       final modelFile = File('${tempDir.path}/mobilefacenet.tflite');
       await modelFile.writeAsBytes(
-        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+        dataModelFile.buffer.asUint8List(dataModelFile.offsetInBytes, dataModelFile.lengthInBytes),
         flush: true,
       );
 
@@ -119,6 +120,13 @@ class _HomePageState extends State<HomePage> {
         ..addDelegate(gpuDelegateV2);
       interpreter = await tfl.Interpreter.fromFile(modelFile,
           options: interpreterOptions);
+
+
+      // sync json file emb.json from assets to temp directory
+      String _embPath = tempDir.path + '/emb.json';
+      jsonFile = new File(_embPath);
+      if (jsonFile.existsSync()) data = json.decode(jsonFile.readAsStringSync());
+
     } on Exception {
       debugPrint('Failed to load model.');
     }
@@ -190,12 +198,12 @@ class _HomePageState extends State<HomePage> {
             faceCrops.add(croppedImage);
 
             // save cropped image for debugging
+            // final croppedFile = File('${tempDir.path}/crop_${DateTime.now().millisecondsSinceEpoch}.png');
+            // await croppedFile.writeAsBytes(imglib.encodePng(croppedImage));
+            // debugPrint("Cropped face saved at: " + croppedFile.path);
 
-            final croppedFile = File('${tempDir.path}/crop_${DateTime.now().millisecondsSinceEpoch}.png');
-            await croppedFile.writeAsBytes(imglib.encodePng(croppedImage));
-            debugPrint("Cropped face saved at: " + croppedFile.path);
-            // String res = _recog(croppedImage);
-            // debugPrint("Recognition Result: " + res);
+            String res = _recog(croppedImage);
+            debugPrint("Recognition Result: " + res);
           }
 
           faceImages.add(FaceImageDTO(
