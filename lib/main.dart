@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:ai_camera/utils/face_utils.dart';
-import 'package:ai_camera/views/camera_screen.dart';
 import 'package:ai_camera/views/face_image_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
@@ -10,7 +9,6 @@ import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
 import 'package:image/image.dart' as imglib;
 import 'FaceImageDTO.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
-import 'dart:typed_data';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
 
@@ -60,7 +58,6 @@ class _HomePageState extends State<HomePage> {
   dynamic data = {};
   late List e1;
   double threshold = 1.0;
-  late Directory tempDir;
   // Future<void> _openCamera() async {
   //   // Push CameraScreen and wait for the captured photo path
   //   final result = await Navigator.push(
@@ -245,29 +242,6 @@ class _HomePageState extends State<HomePage> {
     return predRes;
   }
 
-  String _recog(imglib.Image img) {
-    // Convert image to Float32List input
-    List<double> embedding = buildEmbeddingData(img);
-    e1 = embedding;
-    return compare(e1).toUpperCase();
-  }
-
-  String compare(List currEmb) {
-    if (data.length == 0) return "No Face saved";
-    double minDist = 999;
-    double currDist = 0.0;
-    String predRes = "NOT RECOGNIZED";
-    for (String label in data.keys) {
-      currDist = euclideanDistance(data[label], currEmb);
-      if (currDist <= threshold && currDist < minDist) {
-        minDist = currDist;
-        predRes = label;
-      }
-    }
-    print(minDist.toString() + " " + predRes);
-    return predRes;
-  }
-
   Future<void> _openImagePickers() async {
     final List<AssetEntity>? result = await AssetPicker.pickAssets(
       context,
@@ -279,7 +253,6 @@ class _HomePageState extends State<HomePage> {
     List<FaceImageDTO> faceImages = [];
 
     if (result != null) {
-      final tempDir = await getTemporaryDirectory();
       for (var asset in result) {
         final file = await asset.file;
         if (file != null) {
@@ -338,7 +311,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final displayWidth = MediaQuery.of(context).size.width;
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(title: const Text('Camera Capture Demo')),
@@ -356,50 +328,89 @@ class _HomePageState extends State<HomePage> {
     }
     return Scaffold(
       appBar: AppBar(title: const Text('AI Camera Detection')),
-      body: Center(
-        key: Key('main_column_$timeKey'),
+      body: SafeArea(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // if (_imagePath != null && _imageWidth != null && _imageHeight != null)
-            //   FaceImagePreview(
-            //     imagePath: _imagePath!,
-            //     faceRects: _faceRects ?? [],
-            //     imageWidth: _imageWidth!,
-            //     imageHeight: _imageHeight!,
-            //   )
-            // else
-            //   const Text('No image captured'),
+            // scrollable area for previews
+            Expanded(
+              child: SingleChildScrollView(
+                key: Key('main_column_$timeKey'),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // if (_imagePath != null && _imageWidth != null && _imageHeight != null)
+                    //   FaceImagePreview(
+                    //     imagePath: _imagePath!,
+                    //     faceRects: _faceRects ?? [],
+                    //     imageWidth: _imageWidth!,
+                    //     imageHeight: _imageHeight!,
+                    //   )
+                    // else
+                    //   const Text('No image captured'),
 
-            if (_faceImages.isNotEmpty)
-              Column(
+                    if (_faceImages.isNotEmpty)
+                      Column(
+                        children: [
+                          for (var i = 0; i < _faceImages.length; i++) ...[
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 0.0),
+                              child: FaceImagePreview(
+                                imagePath: _faceImages[i].imagePath!,
+                                // faceRects: _faceImages[i].faceRects!,
+                                facePeoples: _faceImages[i].facePeoples,
+                                imageWidth: _faceImages[i].imageWidth!,
+                                imageHeight: _faceImages[i].imageHeight!,
+                                onAddPeopleCallback: () async {
+                                  await reloadDbPeoples();
+                                },
+                              ),
+                            ),
+                            // gap between items (10px), don't add after last item
+                            if (i != _faceImages.length - 1) const SizedBox(height: 10),
+                          ],
+                        ],
+                      )
+                    else
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 40.0),
+                        child: Text('No images selected'),
+                      ),
+                    const SizedBox(height: 8),
+                    // keep some bottom spacing so last preview isn't obscured by button
+                    const SizedBox(height: 80),
+                  ],
+                ),
+              ),
+            ),
+
+            // bottom fixed area for the buttons
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12.0),
+              color: Colors.transparent,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  ..._faceImages.map((faceImage) => FaceImagePreview(
-                    imagePath: faceImage.imagePath!,
-                    // faceRects: faceImage.faceRects!,
-                    facePeoples: faceImage.facePeoples,
-                    imageWidth: faceImage.imageWidth!,
-                    imageHeight: faceImage.imageHeight!,
-                    onAddPeopleCallback: () async {
-                      await reloadDbPeoples();
-                    },
-                  )).toList()
+                  ElevatedButton(
+                    onPressed: _openImagePickers,
+                    child: const SizedBox(
+                      width: double.infinity,
+                      child: Center(child: Text('Pick Images')),
+                    ),
+                  ),
+                  // optionally keep camera button
+                  // const SizedBox(height: 8),
+                  // OutlinedButton(
+                  //   onPressed: _openCamera,
+                  //   child: const SizedBox(
+                  //     width: double.infinity,
+                  //     child: Center(child: Text('Open Camera')),
+                  //   ),
+                  // ),
                 ],
               ),
-
-
-
-
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _openImagePickers,
-              child: const Text('Pick Images'),
             ),
-            // const SizedBox(height: 20),
-            // ElevatedButton(
-            //   onPressed: _openCamera,
-            //   child: const Text('Open Camera'),
-            // ),
           ],
         ),
       ),
