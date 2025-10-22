@@ -14,6 +14,10 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
 
+import 'db/database_helper.dart';
+import 'dto/face_people.dart';
+import 'dto/people.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -47,6 +51,8 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = true;
 
   List<FaceImageDTO> _faceImages = [];
+  List<People> _dbPeoples = [];
+  String timeKey = DateTime.now().millisecondsSinceEpoch.toString();
 
 
   var interpreter;
@@ -78,15 +84,72 @@ class _HomePageState extends State<HomePage> {
   //   }
   // }
 
+  loadDbPeoples() async {
+    // Load people from database
+    var dbPeoples = await DatabaseHelper().getAllPeople();
+
+    setState(() {
+      _dbPeoples = dbPeoples;
+      // _faceImages = [..._faceImages];
+      // timeKey = DateTime.now().millisecondsSinceEpoch.toString();
+    });
+  }
+
+  reloadDbPeoples() async {
+    // Load people from database
+    var dbPeoples = await DatabaseHelper().getAllPeople();
+
+    setState(() {
+      _dbPeoples = dbPeoples;
+      _faceImages = _faceImages.map((faceImageItem) {
+        var file = File(faceImageItem.imagePath!);
+        imglib.Image convertedImage = imglib.decodeImage(file.readAsBytesSync())!;
+        faceImageItem.setFacePeoples(
+            faceImageItem.facePeoples.map((facePeople) {
+              if (facePeople.dbId != null) {
+                // already has dbId, skip
+                return facePeople;
+              }
+              double x, y, w, h;
+              var rect = facePeople.faceRect;
+
+              x = (rect.left - 10);
+              y = (rect.top - 10);
+              w = (rect.width + 20);
+              h = (rect.height + 20);
+
+              imglib.Image croppedImage = imglib.copyCrop(
+                  convertedImage, x: x.round(), y: y.round(),width:  w.round(), height:  h.round());
+
+              // save cropped image for debugging
+              // final croppedFile = File('${tempDir.path}/crop_${DateTime.now().millisecondsSinceEpoch}.png');
+              // await croppedFile.writeAsBytes(imglib.encodePng(croppedImage));
+              // debugPrint("Cropped face saved at: " + croppedFile.path);
+
+              List<double> embeddingData = buildEmbeddingData(croppedImage);
+              String? dbId = detectPeopleByDBAndEmbedding(croppedImage, embeddingData);
+              facePeople.dbId = dbId;
+              return facePeople;
+            }).toList()
+        );
+        return faceImageItem;
+      }).toList();
+    });
+  }
+
+
 
   @override
   void initState() {
     super.initState();
-    loadModel().then((value) {
+    loadModel().then((value) async {
+      await loadDbPeoples();
       setState(() {
         _isLoading = false;
       });
     });
+
+
   }
 
 
@@ -132,8 +195,19 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  String _recog(imglib.Image img) {
+
+  String? detectPeopleByDB(imglib.Image img) {
     // Convert image to Float32List input
+    List<double> embedding = buildEmbeddingData(img);
+    return compareWithDB(embedding);
+  }
+
+  String? detectPeopleByDBAndEmbedding(imglib.Image img, List<double> embedding) {
+    // Convert image to Float32List input
+    return compareWithDB(embedding);
+  }
+
+  List<double> buildEmbeddingData(imglib.Image img) {
     var input = imageToByteListFloat32(img, 112, 128, 128);
     // Reshape input for TFLite
     var inputTensor = input.reshape([1, 112, 112, 3]);
@@ -143,6 +217,37 @@ class _HomePageState extends State<HomePage> {
     interpreter.run(inputTensor, output);
     // Flatten output
     var embedding = List<double>.from(output[0]);
+    return embedding;
+  }
+
+  String? compareWithDB(List currEmb) {
+    if (_dbPeoples.isEmpty) return null;
+    double minDist = 999;
+    double currDist = 0.0;
+    String? predRes = null;
+    for (People person in _dbPeoples) {
+      for (List<double> dbEmb in person.embeddings) {
+        currDist = euclideanDistance(dbEmb, currEmb);
+        if (currDist <= threshold && currDist < minDist) {
+          minDist = currDist;
+          predRes = person.id;
+        }
+      }
+    }
+    // for (String label in data.keys) {
+    //   currDist = euclideanDistance(data[label], currEmb);
+    //   if (currDist <= threshold && currDist < minDist) {
+    //     minDist = currDist;
+    //     predRes = label;
+    //   }
+    // }
+    // print(minDist.toString() + " " + predRes);
+    return predRes;
+  }
+
+  String _recog(imglib.Image img) {
+    // Convert image to Float32List input
+    List<double> embedding = buildEmbeddingData(img);
     e1 = embedding;
     return compare(e1).toUpperCase();
   }
@@ -185,6 +290,7 @@ class _HomePageState extends State<HomePage> {
           List<Rect> rects = await detectFaces(imagePath);
           List<imglib.Image> faceCrops = [];
           imglib.Image convertedImage = imglib.decodeImage(file.readAsBytesSync())!;
+          List<FacePeople> facePeoples = [];
           for (var rect in rects) {
             double x, y, w, h;
 
@@ -202,13 +308,20 @@ class _HomePageState extends State<HomePage> {
             // await croppedFile.writeAsBytes(imglib.encodePng(croppedImage));
             // debugPrint("Cropped face saved at: " + croppedFile.path);
 
-            String res = _recog(croppedImage);
-            debugPrint("Recognition Result: " + res);
+            List<double> embeddingData = buildEmbeddingData(croppedImage);
+            String? peopleId = detectPeopleByDBAndEmbedding(croppedImage, embeddingData);
+            debugPrint("Recognition Result: ${peopleId ?? "N/a"}");
+            facePeoples.add(FacePeople(
+                dbId: peopleId,
+                faceRect: rect,
+                embedding: embeddingData,
+                imagePath: imagePath
+            ));
           }
 
           faceImages.add(FaceImageDTO(
             imagePath: imagePath,
-            faceRects: rects,
+            facePeoples: facePeoples,
             imageWidth: imageWidth,
             imageHeight: imageHeight,
             faceImages: faceCrops
@@ -218,7 +331,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     setState(() {
-      _faceImages = faceImages;
+      _faceImages = [..._faceImages, ...faceImages];
     });
 
   }
@@ -242,8 +355,9 @@ class _HomePageState extends State<HomePage> {
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Camera Capture Demo')),
+      appBar: AppBar(title: const Text('AI Camera Detection')),
       body: Center(
+        key: Key('main_column_$timeKey'),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -262,9 +376,13 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   ..._faceImages.map((faceImage) => FaceImagePreview(
                     imagePath: faceImage.imagePath!,
-                    faceRects: faceImage.faceRects!,
+                    // faceRects: faceImage.faceRects!,
+                    facePeoples: faceImage.facePeoples,
                     imageWidth: faceImage.imageWidth!,
                     imageHeight: faceImage.imageHeight!,
+                    onAddPeopleCallback: () async {
+                      await reloadDbPeoples();
+                    },
                   )).toList()
                 ],
               ),

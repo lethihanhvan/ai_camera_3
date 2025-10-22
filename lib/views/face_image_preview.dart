@@ -6,22 +6,26 @@ import 'package:vector_math/vector_math_64.dart' show Vector3, Matrix4;
 import 'package:uuid/uuid.dart';
 
 import '../db/database_helper.dart';
+import '../dto/face_people.dart';
 import '../dto/people.dart';
 
 class FaceImagePreview extends StatefulWidget {
   final String imagePath;
-  final List<Rect> faceRects;
+  // final List<Rect> faceRects;
+  final List<FacePeople> facePeoples;
   final bool rectsAreNormalized; // true if rects are in 0..1 normalized coordinates
   final int imageWidth;
   final int imageHeight;
+  final Function onAddPeopleCallback;
 
   const FaceImagePreview({
     Key? key,
     required this.imagePath,
-    required this.faceRects,
+    required this.facePeoples,
     this.rectsAreNormalized = false,
     required this.imageWidth,
     required this.imageHeight,
+    required this.onAddPeopleCallback,
   }) : super(key: key);
 
   @override
@@ -116,6 +120,8 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
       }
     }
 
+    widget.onAddPeopleCallback();
+
 
 //     // create an example People
 //     final people = People(
@@ -173,8 +179,8 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
     // hit inflation in image pixels
     final double hitInflateImage = math.max(6.0, math.min(imageSize.width, imageSize.height) * 0.02);
     int? hitIndex;
-    for (var i = 0; i < widget.faceRects.length; i++) {
-      final r0 = widget.faceRects[i];
+    for (var i = 0; i < widget.facePeoples.length; i++) {
+      final r0 = widget.facePeoples[i].faceRect;
       final Rect rImage = normalizedRects
           ? Rect.fromLTRB(r0.left * imageSize.width, r0.top * imageSize.height, r0.right * imageSize.width, r0.bottom * imageSize.height)
           : r0;
@@ -186,8 +192,8 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
 
     if (hitIndex == null) {
       debugPrint('No hit. viewportPoint=$viewportPoint scenePoint=$scenePoint imagePoint=$imagePoint normalizedRects=$normalizedRects');
-      for (var i = 0; i < widget.faceRects.length; i++) {
-        final r0 = widget.faceRects[i];
+      for (var i = 0; i < widget.facePeoples.length; i++) {
+        final r0 = widget.facePeoples[i].faceRect;
         final Rect rImage = normalizedRects
             ? Rect.fromLTRB(r0.left * imageSize.width, r0.top * imageSize.height, r0.right * imageSize.width, r0.bottom * imageSize.height)
             : r0;
@@ -210,24 +216,41 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
 
   // Show dialog to add or update People. If faceIndex is provided, prefill name with a helpful placeholder.
   Future<void> showPeopleInformationDialog({int? faceIndex}) async {
+
     final uuidController = TextEditingController();
-    final nameController = TextEditingController(text: faceIndex != null ? 'Person #$faceIndex' : '');
+    final nameController = TextEditingController(text: faceIndex != null ? '' : '');
     final studentIdController = TextEditingController();
     final emailController = TextEditingController();
     final classificationController = TextEditingController();
+
+    uuidController.text = faceIndex != null && widget.facePeoples[faceIndex].dbId != null
+        ? widget.facePeoples[faceIndex].dbId!
+        : '';
+
+    if (uuidController.text.isNotEmpty) {
+      // existing person; load their info to prefill
+      final existing = await DatabaseHelper().getPeopleById(uuidController.text);
+      if (existing != null) {
+        nameController.text = existing.name;
+        studentIdController.text = existing.studentId ?? "";
+        emailController.text = existing.email ?? '';
+        classificationController.text = existing.classification ?? '';
+      }
+    }
 
     await showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Add People Information'),
+          title: const Text('Save People Information'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: uuidController,
-                  decoration: const InputDecoration(labelText: 'UUID (leave empty for new)'),
+                  readOnly: true,
+                  decoration: const InputDecoration(labelText: 'UUID'),
                 ),
                 TextField(
                   controller: nameController,
@@ -257,6 +280,7 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
             ),
             TextButton(
               onPressed: () {
+
                 final uuidInput = uuidController.text.trim();
                 final name = nameController.text.trim();
                 final studentId = studentIdController.text.trim();
@@ -264,7 +288,8 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
                 final classification = classificationController.text.trim();
                 Navigator.of(context).pop();
                 // For now embedding isn't available here; pass null so DB helper will store empty embeddings.
-                _addPeopleInformation(uuidInput.isEmpty ? null : uuidInput, name, studentId, email, classification, null);
+                _addPeopleInformation(uuidInput.isEmpty ? null : uuidInput, name, studentId, email, classification,
+                    widget.facePeoples[faceIndex ?? 0].embedding);
               },
               child: const Text('Save'),
             ),
@@ -307,11 +332,11 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
                         width: double.infinity,
                         height: double.infinity,
                       ),
-                      if (widget.faceRects.isNotEmpty)
+                      if (widget.facePeoples.isNotEmpty)
                         Positioned.fill(
                           child: CustomPaint(
                             painter: _FacePainter(
-                              widget.faceRects,
+                              widget.facePeoples,
                               imageSize: Size(widget.imageWidth.toDouble(), widget.imageHeight.toDouble()),
                               selectedIndex: _selectedFaceIndex,
                               debugTapPoint: _debugLastImagePoint,
@@ -327,28 +352,29 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
             ),
           ),
         ),
-        const SizedBox(height: 8),
-        Text('People Detected: ${widget.faceRects.length}'),
-        const SizedBox(height: 16),
-        TextButton(
-          onPressed: () async {
-            await showPeopleInformationDialog();
-          },
-          child: const Text('Add People'),
-        ),
+        // const SizedBox(height: 8),
+        // // Text('People Detected: ${widget.facePeoples.length}'),
+        // // const SizedBox(height: 16),
+        // TextButton(
+        //   onPressed: () async {
+        //     await showPeopleInformationDialog();
+        //   },
+        //   child: const Text('Add People'),
+        // ),
       ],
     );
   }
 }
 
 class _FacePainter extends CustomPainter {
-  final List<Rect> rects;
+  // final List<Rect> rects;
+  final List<FacePeople> facePeoples;
   final Size imageSize;
   final int? selectedIndex;
   final Offset? debugTapPoint;
   final bool rectsAreNormalized;
 
-  _FacePainter(this.rects, {required this.imageSize, this.selectedIndex, this.debugTapPoint, required this.rectsAreNormalized});
+  _FacePainter(this.facePeoples, {required this.imageSize, this.selectedIndex, this.debugTapPoint, required this.rectsAreNormalized});
 
   @override
    void paint(Canvas canvas, Size size) {
@@ -366,8 +392,9 @@ class _FacePainter extends CustomPainter {
     final double paintScaleX = destinationSize.width / imageSize.width;
     final double paintScaleY = destinationSize.height / imageSize.height;
 
-    for (var i = 0; i < rects.length; i++) {
-      final rect = rects[i];
+    for (var i = 0; i < facePeoples.length; i++) {
+      final String? uuid = facePeoples[i].dbId;
+      final rect = facePeoples[i].faceRect;
 
       // convert rect to painted coordinates. If rects are normalized (0..1) then they should be
       // provided as such by the caller; we can't detect that reliably here, but the hit-test
@@ -395,12 +422,22 @@ class _FacePainter extends CustomPainter {
         final fill = Paint()..color = Colors.green.withAlpha((0.2 * 255).round());
         canvas.drawRect(paintedRect, fill);
         final highlight = Paint()
-          ..color = Colors.green
+          ..color = Colors.grey
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2.5;
         canvas.drawRect(paintedRect, highlight);
       } else {
-        canvas.drawRect(paintedRect, strokePaint);
+        if (uuid != null && uuid.isNotEmpty) {
+          print('Drawing highlighted rect for known uuid=$uuid at index=$i');
+          final highlight = Paint()
+            ..color = Colors.green
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.5;
+          canvas.drawRect(paintedRect, highlight);
+        } else {
+          canvas.drawRect(paintedRect, strokePaint);
+        }
+
       }
 
       // draw index label for debugging
@@ -429,5 +466,12 @@ class _FacePainter extends CustomPainter {
    }
 
    @override
-   bool shouldRepaint(covariant _FacePainter oldDelegate) => rects != oldDelegate.rects || imageSize != oldDelegate.imageSize || selectedIndex != oldDelegate.selectedIndex || debugTapPoint != oldDelegate.debugTapPoint;
+   bool shouldRepaint(covariant _FacePainter oldDelegate) =>
+       facePeoples != oldDelegate.facePeoples ||
+           imageSize != oldDelegate.imageSize
+       || selectedIndex != oldDelegate.selectedIndex || debugTapPoint != oldDelegate.debugTapPoint;
+
+  // @override
+  // bool shouldRepaint(covariant _FacePainter oldDelegate) =>
+  //     true;
  }
