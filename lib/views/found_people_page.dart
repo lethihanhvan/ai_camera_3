@@ -116,11 +116,11 @@ class FoundPeoplePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Found People (' + (people.length.toString()) + ')'),
+        title: Text('Found People (' + (people.length.toString()) + ')', style: const TextStyle(fontSize: 18)),
         actions: [
           IconButton(
             tooltip: 'Export to Excel',
-            icon: const Icon(Icons.file_download),
+            icon: Text('Create Report', style: TextStyle(fontSize: 14)),
             onPressed: () => _exportExcel(context),
           )
         ],
