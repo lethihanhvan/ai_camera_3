@@ -37,6 +37,9 @@ dependencies:
   sqflite: ^2.2.8
   path: ^1.8.3
   uuid: ^3.0.6
+  excel: ^4.0.6
+  open_file: ^3.5.10
+  syncfusion_flutter_xlsio: ^29.2.11
 
 dev_dependencies:
   flutter_test:
@@ -58,6 +61,8 @@ dev_dependencies:
 #    path: ./tflite_flutter-0.6.0
 #  tflite_flutter: 0.7.0
   wechat_assets_picker: ^9.8.0
+  open_file: ^3.5.10
+  excel: ^4.0.6
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

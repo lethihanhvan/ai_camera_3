@@ -12,6 +12,7 @@ import 'FaceImageDTO.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
+import 'views/found_people_page.dart';
 
 import 'db/database_helper.dart';
 import 'dto/face_people.dart';
@@ -149,6 +150,32 @@ class _HomePageState extends State<HomePage> {
     });
 
 
+  }
+
+
+  Map listAndShowFoundPeople() {
+    debugPrint("Known People in DB:");
+
+    var map = {};
+    List<People> foundPeople = [];
+    List<String> dbIds = [];
+    _faceImages.forEach((faceImage) {
+      faceImage.facePeoples.forEach((facePeople) {
+        String? dbId = facePeople.dbId;
+        if (dbId != null) {
+          People? person = _dbPeoples.firstWhere((p) => p.id == dbId);
+          if (!foundPeople.any((p) => p.id == person.id)) {
+            dbIds.add(dbId);
+          }
+        }
+      });
+    });
+
+    foundPeople = _dbPeoples.where((p) => dbIds.contains(p.id)).toList();
+
+    map["people"] = foundPeople;
+    map["imagesPaths"] = _faceImages.map((e) => e.imagePath!).toList();
+    return map;
   }
 
 
@@ -400,6 +427,19 @@ class _HomePageState extends State<HomePage> {
                     child: const SizedBox(
                       width: double.infinity,
                       child: Center(child: Text('Pick Images')),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton(
+                    onPressed: () {
+                      final mapData = listAndShowFoundPeople();
+                      final found = mapData["people"] as List<People>;
+                      final List<String> imagePaths = mapData["imagesPaths"] as List<String>;
+                      Navigator.of(context).push(MaterialPageRoute(builder: (_) => FoundPeoplePage(people: found, imagesPaths: imagePaths)));
+                    },
+                    child: const SizedBox(
+                      width: double.infinity,
+                      child: Center(child: Text('Show Found People')),
                     ),
                   ),
                   // optionally keep camera button
