@@ -5,6 +5,7 @@ import 'package:open_file/open_file.dart';
 import 'package:syncfusion_flutter_xlsio/xlsio.dart' as xlsio;
 
 import '../dto/people.dart';
+import 'exported_files_page.dart';
 
 class FoundPeoplePage extends StatelessWidget {
   final List<People> people;
@@ -63,7 +64,7 @@ class FoundPeoplePage extends StatelessWidget {
     final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
     // make filename show readable date and time
     String formattedTimestamp = timestamp.replaceAll('T', '_').split('.').first;
-    final file = File('${dir.path}/found_people_with_images_$formattedTimestamp _ $timestamp.xlsx');
+    final file = File('${dir.path}/report_$formattedTimestamp _ $timestamp.xlsx');
     await file.writeAsBytes(bytes, flush: true);
 
     OpenFile.open(file.path);
@@ -122,7 +123,16 @@ class FoundPeoplePage extends StatelessWidget {
             tooltip: 'Export to Excel',
             icon: Text('Create Report', style: TextStyle(fontSize: 14)),
             onPressed: () => _exportExcel(context),
-          )
+          ),
+          // IconButton(
+          //   tooltip: 'View Exported Files',
+          //   icon: Icon(Icons.folder),
+          //   onPressed: () {
+          //     Navigator.of(context).push(
+          //       MaterialPageRoute(builder: (_) => const ExportedFilesPage()),
+          //     );
+          //   },
+          // ),
         ],
       ),
       body: people.isEmpty

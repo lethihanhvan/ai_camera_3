@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:ai_camera/utils/face_utils.dart';
+import 'package:ai_camera/views/exported_files_page.dart';
 import 'package:ai_camera/views/face_image_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
@@ -429,8 +430,8 @@ class _HomePageState extends State<HomePage> {
                       child: Center(child: Text('Pick Images')),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  OutlinedButton(
+                  if (_faceImages.isNotEmpty) const SizedBox(height: 8),
+                  if (_faceImages.isNotEmpty)  OutlinedButton(
                     onPressed: () {
                       final mapData = listAndShowFoundPeople();
                       final found = mapData["people"] as List<People>;
@@ -440,6 +441,18 @@ class _HomePageState extends State<HomePage> {
                     child: const SizedBox(
                       width: double.infinity,
                       child: Center(child: Text('Show Found People')),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const ExportedFilesPage()),
+                      );
+                    },
+                    child: const SizedBox(
+                      width: double.infinity,
+                      child: Center(child: Text('Report Files')),
                     ),
                   ),
                   // optionally keep camera button
