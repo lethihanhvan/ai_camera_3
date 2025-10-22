@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -61,4 +63,15 @@ double euclideanDistance(List e1, List e2) {
     sum += pow((e1[i] - e2[i]), 2);
   }
   return sqrt(sum);
+}
+double cosineDistance(List<double> a, List<double> b) {
+  double dot = 0.0;
+  double normA = 0.0;
+  double normB = 0.0;
+  for (int i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  return 1 - (dot / (math.sqrt(normA) * math.sqrt(normB)));
 }

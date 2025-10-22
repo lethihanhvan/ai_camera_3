@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:ai_camera/utils/face_utils.dart';
 import 'package:ai_camera/views/face_image_preview.dart';
@@ -57,7 +58,8 @@ class _HomePageState extends State<HomePage> {
   late File jsonFile;
   dynamic data = {};
   late List e1;
-  double threshold = 1.0;
+  // double threshold = 1.0;
+  double threshold = 0.35;
   // Future<void> _openCamera() async {
   //   // Push CameraScreen and wait for the captured photo path
   //   final result = await Navigator.push(
@@ -224,7 +226,8 @@ class _HomePageState extends State<HomePage> {
     String? predRes = null;
     for (People person in _dbPeoples) {
       for (List<double> dbEmb in person.embeddings) {
-        currDist = euclideanDistance(dbEmb, currEmb);
+        // currDist = euclideanDistance(dbEmb, currEmb);
+        currDist = cosineDistance(dbEmb, currEmb.cast<double>());
         if (currDist <= threshold && currDist < minDist) {
           minDist = currDist;
           predRes = person.id;
