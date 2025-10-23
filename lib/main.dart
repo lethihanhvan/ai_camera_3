@@ -14,6 +14,7 @@ import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
 import 'views/found_people_page.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'db/database_helper.dart';
 import 'dto/face_people.dart';
@@ -85,6 +86,11 @@ class _HomePageState extends State<HomePage> {
   //   }
   // }
 
+  Future<void> _requestPermissions() async {
+    await Permission.photos.request();
+    await Permission.videos.request();
+  }
+
   loadDbPeoples() async {
     // Load people from database
     var dbPeoples = await DatabaseHelper().getAllPeople();
@@ -145,6 +151,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     loadModel().then((value) async {
       await loadDbPeoples();
+      await _requestPermissions();
       setState(() {
         _isLoading = false;
       });
