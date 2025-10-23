@@ -309,43 +309,53 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
           width: displayWidth,
           child: AspectRatio(
             aspectRatio: widget.imageWidth / widget.imageHeight,
-            child: ClipRect(
-              child: InteractiveViewer(
-                key: _interactiveViewerKey,
-                transformationController: _transformationController,
-                panEnabled: true,
-                scaleEnabled: true,
-                boundaryMargin: const EdgeInsets.all(100),
-                minScale: 1.0,
-                maxScale: 10.0,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTapDown: _handleTapDown,
-                  onDoubleTapDown: (details) => _doubleTapDetails = details,
-                  onDoubleTap: _handleDoubleTap,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.file(
-                        File(widget.imagePath),
-                        fit: BoxFit.contain,
-                        width: double.infinity,
-                        height: double.infinity,
-                      ),
-                      if (widget.facePeoples.isNotEmpty)
-                        Positioned.fill(
-                          child: CustomPaint(
-                            painter: _FacePainter(
-                              widget.facePeoples,
-                              imageSize: Size(widget.imageWidth.toDouble(), widget.imageHeight.toDouble()),
-                              selectedIndex: _selectedFaceIndex,
-                              debugTapPoint: _debugLastImagePoint,
-                              rectsAreNormalized: widget.rectsAreNormalized,
-                            ),
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey, width: 2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              clipBehavior: Clip.hardEdge,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: ClipRect(
+                  child: InteractiveViewer(
+                    key: _interactiveViewerKey,
+                    transformationController: _transformationController,
+                    panEnabled: true,
+                    scaleEnabled: true,
+                    boundaryMargin: const EdgeInsets.all(100),
+                    minScale: 1.0,
+                    maxScale: 10.0,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTapDown: _handleTapDown,
+                      onDoubleTapDown: (details) => _doubleTapDetails = details,
+                      onDoubleTap: _handleDoubleTap,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.file(
+                            File(widget.imagePath),
+                            fit: BoxFit.contain,
+                            width: double.infinity,
+                            height: double.infinity,
                           ),
-                        ),
+                          if (widget.facePeoples.isNotEmpty)
+                            Positioned.fill(
+                              child: CustomPaint(
+                                painter: _FacePainter(
+                                  widget.facePeoples,
+                                  imageSize: Size(widget.imageWidth.toDouble(), widget.imageHeight.toDouble()),
+                                  selectedIndex: _selectedFaceIndex,
+                                  debugTapPoint: _debugLastImagePoint,
+                                  rectsAreNormalized: widget.rectsAreNormalized,
+                                ),
+                              ),
+                            ),
 
-                    ],
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
