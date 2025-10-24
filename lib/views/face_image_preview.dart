@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3, Matrix4;
 import 'package:uuid/uuid.dart';
+import 'package:image/image.dart' as imglib;
 
 import '../db/database_helper.dart';
 import '../dto/face_people.dart';
@@ -17,6 +19,7 @@ class FaceImagePreview extends StatefulWidget {
   final int imageWidth;
   final int imageHeight;
   final Function onAddPeopleCallback;
+  final List<imglib.Image>? faceImages;
 
   const FaceImagePreview({
     Key? key,
@@ -26,6 +29,7 @@ class FaceImagePreview extends StatefulWidget {
     required this.imageWidth,
     required this.imageHeight,
     required this.onAddPeopleCallback,
+    this.faceImages,
   }) : super(key: key);
 
   @override
@@ -227,77 +231,334 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
         ? widget.facePeoples[faceIndex].dbId!
         : '';
 
+    // Fetch all people from database
+    final allPeople = await DatabaseHelper().getAllPeople();
+
+    bool isSelectMode = uuidController.text.isNotEmpty; // Start in select mode if UUID exists
+    People? selectedPerson;
+
     if (uuidController.text.isNotEmpty) {
-      // existing person; load their info to prefill
-      final existing = await DatabaseHelper().getPeopleById(uuidController.text);
-      if (existing != null) {
-        nameController.text = existing.name;
-        studentIdController.text = existing.studentId ?? "";
-        emailController.text = existing.email ?? '';
-        classificationController.text = existing.classification ?? '';
+      // existing person; find from allPeople list to ensure same instance
+      selectedPerson = allPeople.firstWhere(
+        (p) => p.id == uuidController.text,
+        orElse: () => allPeople.isEmpty ? People(id: '', name: '', classification: '') : allPeople.first,
+      );
+
+      // Only use if we found a valid match
+      if (selectedPerson.id == uuidController.text) {
+        nameController.text = selectedPerson.name;
+        studentIdController.text = selectedPerson.studentId ?? "";
+        emailController.text = selectedPerson.email ?? '';
+        classificationController.text = selectedPerson.classification ?? '';
+      } else {
+        // No match found, switch to create mode
+        selectedPerson = null;
+        isSelectMode = false;
+      }
+    }
+
+    // Get face image for preview
+    Widget? facePreview;
+    if (faceIndex != null) {
+      // Use pre-cropped face image if available
+      if (widget.faceImages != null && faceIndex < widget.faceImages!.length) {
+        final faceImg = widget.faceImages![faceIndex];
+        final Uint8List bytes = Uint8List.fromList(imglib.encodePng(faceImg));
+
+        facePreview = Container(
+          width: 120,
+          height: 120,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey, width: 2),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: Image.memory(
+              bytes,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 120,
+                  height: 120,
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.person, size: 60),
+                );
+              },
+            ),
+          ),
+        );
+      } else {
+        // Fallback to manual cropping if faceImages not available
+        final faceRect = widget.facePeoples[faceIndex].faceRect;
+
+        facePreview = Container(
+          width: 120,
+          height: 120,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey, width: 2),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: faceRect.width,
+                height: faceRect.height,
+                child: OverflowBox(
+                  minWidth: 0,
+                  minHeight: 0,
+                  maxWidth: widget.imageWidth.toDouble(),
+                  maxHeight: widget.imageHeight.toDouble(),
+                  child: Transform.translate(
+                    offset: Offset(-faceRect.left, -faceRect.top),
+                    child: Image.file(
+                      File(widget.imagePath),
+                      width: widget.imageWidth.toDouble(),
+                      height: widget.imageHeight.toDouble(),
+                      fit: BoxFit.none,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 120,
+                          height: 120,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.person, size: 60),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
       }
     }
 
     await showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Save People Information'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: uuidController,
-                  readOnly: true,
-                  decoration: const InputDecoration(labelText: 'UUID'),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              insetPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              child: AlertDialog(
+                title: Column(
+                  children: [
+                    if (facePreview != null) ...[
+                      facePreview,
+                      const SizedBox(height: 12),
+                    ],
+                    const Text(
+                      'Save People Information',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ],
                 ),
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Name'),
-                ),
-                TextField(
-                  controller: studentIdController,
-                  decoration: const InputDecoration(labelText: 'Student ID'),
-                ),
-                TextField(
-                  controller: emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                ),
-                TextField(
-                  controller: classificationController,
-                  decoration: const InputDecoration(labelText: 'Classification'),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Mode selector
+                      SegmentedButton<bool>(
+                        segments: const [
+                          ButtonSegment(
+                            value: true,
+                            label: Text('Select Existing', style: TextStyle(fontSize: 14)),
+                            icon: Icon(Icons.person_search, size: 18),
+                          ),
+                          ButtonSegment(
+                            value: false,
+                            label: Text('Create New', style: TextStyle(fontSize: 14)),
+                            icon: Icon(Icons.person_add, size: 18),
+                          ),
+                        ],
+                        selected: {isSelectMode},
+                        onSelectionChanged: (Set<bool> newSelection) {
+                          setState(() {
+                            isSelectMode = newSelection.first;
+                            if (!isSelectMode) {
+                              // Reset to new person mode
+                              selectedPerson = null;
+                              uuidController.clear();
+                              nameController.clear();
+                              studentIdController.clear();
+                              emailController.clear();
+                              classificationController.clear();
+                            }
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
 
-                final uuidInput = uuidController.text.trim();
-                final name = nameController.text.trim();
-                final studentId = studentIdController.text.trim();
-                final email = emailController.text.trim().isEmpty ? null : emailController.text.trim();
-                final classification = classificationController.text.trim();
-                Navigator.of(context).pop();
-                // For now embedding isn't available here; pass null so DB helper will store empty embeddings.
-                _addPeopleInformation(uuidInput.isEmpty ? null : uuidInput, name, studentId, email, classification,
-                    widget.facePeoples[faceIndex ?? 0].embedding);
-              },
-              child: const Text('Save'),
-            ),
-          ],
+                      // Show dropdown if in select mode
+                      if (isSelectMode) ...[
+                        DropdownButtonFormField<People>(
+                          initialValue: selectedPerson,
+                          decoration: InputDecoration(
+                            labelText: 'Select Person',
+                            labelStyle: const TextStyle(fontSize: 14),
+                            prefixIcon: const Icon(Icons.people, size: 20),
+                            isDense: true,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          ),
+                          items: allPeople.map((person) {
+                            return DropdownMenuItem<People>(
+                              value: person,
+                              child: Text(
+                                '${person.name} (${person.classification ?? "N/A"})',
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (People? person) {
+                            setState(() {
+                              selectedPerson = person;
+                              if (person != null) {
+                                uuidController.text = person.id;
+                                nameController.text = person.name;
+                                studentIdController.text = person.studentId ?? "";
+                                emailController.text = person.email ?? '';
+                                classificationController.text = person.classification ?? '';
+                              }
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+
+                      // Show UUID field (read-only)
+                      if (uuidController.text.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _buildTextFieldWithLabel(
+                            controller: uuidController,
+                            label: 'UUID',
+                            icon: Icons.fingerprint,
+                            readOnly: true,
+                          ),
+                        ),
+
+                      // Editable fields (disabled in select mode after selection)
+                      _buildTextFieldWithLabel(
+                        controller: nameController,
+                        label: 'Name',
+                        icon: Icons.person,
+                        hint: 'Enter full name',
+                        readOnly: isSelectMode && selectedPerson != null,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextFieldWithLabel(
+                        controller: studentIdController,
+                        label: 'Student ID',
+                        icon: Icons.badge,
+                        hint: 'e.g., S12345',
+                        readOnly: isSelectMode && selectedPerson != null,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextFieldWithLabel(
+                        controller: emailController,
+                        label: 'Email',
+                        icon: Icons.email,
+                        hint: 'user@example.com',
+                        keyboardType: TextInputType.emailAddress,
+                        readOnly: isSelectMode && selectedPerson != null,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextFieldWithLabel(
+                        controller: classificationController,
+                        label: 'Classification',
+                        icon: Icons.category,
+                        hint: 'e.g., Student, Teacher',
+                        readOnly: isSelectMode && selectedPerson != null,
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                  FilledButton(
+                    onPressed: () {
+                      final uuidInput = uuidController.text.trim();
+                      final name = nameController.text.trim();
+                      final studentId = studentIdController.text.trim();
+                      final email = emailController.text.trim().isEmpty ? null : emailController.text.trim();
+                      final classification = classificationController.text.trim();
+
+                      if (name.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please enter a name')),
+                        );
+                        return;
+                      }
+
+                      Navigator.of(context).pop();
+                      _addPeopleInformation(
+                        uuidInput.isEmpty ? null : uuidInput,
+                        name,
+                        studentId,
+                        email,
+                        classification,
+                        faceIndex != null ? widget.facePeoples[faceIndex].embedding : null,
+                      );
+                    },
+                    child: const Text('Save'),
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
     );
     // controllers will be GC'd; no explicit dispose needed for ephemeral controllers here
+  }
+
+  Widget _buildTextFieldWithLabel({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    String? hint,
+    TextInputType keyboardType = TextInputType.text,
+    bool readOnly = false,
+  }) {
+    return TextField(
+      controller: controller,
+      readOnly: readOnly,
+      keyboardType: keyboardType,
+      style: const TextStyle(fontSize: 16),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(fontSize: 16),
+        hintText: hint,
+        hintStyle: const TextStyle(fontSize: 16),
+        prefixIcon: Icon(icon, size: 20),
+        isDense: false,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Colors.grey, width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Colors.blue, width: 2),
+        ),
+        filled: readOnly,
+        fillColor: readOnly ? Colors.grey.shade100 : null,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      ),
+    );
   }
 
   @override

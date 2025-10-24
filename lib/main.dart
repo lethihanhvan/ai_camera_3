@@ -410,6 +410,7 @@ class _HomePageState extends State<HomePage> {
                                 facePeoples: _faceImages[i].facePeoples,
                                 imageWidth: _faceImages[i].imageWidth!,
                                 imageHeight: _faceImages[i].imageHeight!,
+                                faceImages: _faceImages[i].faceImages,
                                 onAddPeopleCallback: () async {
                                   await reloadDbPeoples();
                                 },
