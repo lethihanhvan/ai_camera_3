@@ -165,6 +165,41 @@ class FoundPeoplePage extends StatelessWidget {
                           ),
                           const SizedBox(height: 6),
                           if (p.studentId != null) Text('Student ID: ${p.studentId}'),
+                          // Show image thumbnails (if any) then the name
+                          if (p.images.isNotEmpty) ...[
+                            SizedBox(
+                              height: 56,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: (p.images.length > 5) ? 5 : p.images.length,
+                                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                                itemBuilder: (context, imgIndex) {
+                                  // If this is the last visible item and there are more images,
+                                  // show a +N indicator instead of a thumbnail.
+                                  final remaining = p.images.length - 5;
+                                  if (imgIndex == 4 && p.images.length > 5) {
+                                    return CircleAvatar(
+                                      radius: 24,
+                                      backgroundColor: Colors.grey.shade300,
+                                      child: Text(
+                                        '+${remaining > 0 ? remaining : 0}',
+                                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                      ),
+                                    );
+                                  }
+
+                                  final bytes = p.images[imgIndex];
+                                  return CircleAvatar(
+                                    radius: 24,
+                                    backgroundColor: Colors.grey.shade200,
+                                    backgroundImage: MemoryImage(bytes),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+
                           // name is non-nullable on People, show directly
                           Text('Name: ${p.name}'),
                           if (p.email != null) Text('Email: ${p.email}'),
