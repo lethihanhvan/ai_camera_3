@@ -258,28 +258,29 @@ class _HomePageState extends State<HomePage> {
 
   String? compareWithDB(List currEmb) {
     if (_dbPeoples.isEmpty) return null;
-    double minDist = 999;
-    double currDist = 0.0;
-    String? predRes = null;
+
+    final Map<String, double> mapMatchPeople = {};
+
+    // Collect the smallest distance for each person (across their embeddings)
     for (People person in _dbPeoples) {
       for (List<double> dbEmb in person.embeddings) {
-        currDist = euclideanDistance(dbEmb, currEmb);
-        // currDist = cosineDistance(dbEmb, currEmb.cast<double>());
-        if (currDist <= threshold && currDist < minDist) {
-          minDist = currDist;
-          predRes = person.id;
+        final double currDist = euclideanDistance(dbEmb, currEmb);
+        if (currDist <= threshold) {
+          final prev = mapMatchPeople[person.id];
+          if (prev == null || currDist < prev) {
+            mapMatchPeople[person.id] = currDist;
+          }
         }
       }
     }
-    // for (String label in data.keys) {
-    //   currDist = euclideanDistance(data[label], currEmb);
-    //   if (currDist <= threshold && currDist < minDist) {
-    //     minDist = currDist;
-    //     predRes = label;
-    //   }
-    // }
-    // print(minDist.toString() + " " + predRes);
-    return predRes;
+
+    if (mapMatchPeople.isEmpty) return null;
+
+    // Find the entry with the minimum distance
+    final bestEntry = mapMatchPeople.entries.reduce((a, b) => a.value <= b.value ? a : b);
+    debugPrint("Match People Distances: $mapMatchPeople, best: ${bestEntry.key}=${bestEntry.value}");
+
+    return bestEntry.key;
   }
 
   Future<void> _openImagePickers() async {
