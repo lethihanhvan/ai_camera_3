@@ -422,6 +422,22 @@ class _HomePageState extends State<HomePage> {
                                 onAddPeopleCallback: () async {
                                   await reloadDbPeoples();
                                 },
+                                onDelete: () async {
+                                  // capture current index
+                                  final idx = i;
+                                  // remove the image entry and refresh state
+                                  setState(() {
+                                    if (idx >= 0 && idx < _faceImages.length) {
+                                      _faceImages.removeAt(idx);
+                                    }
+                                  });
+                                  await reloadDbPeoples();
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Image removed')),
+                                    );
+                                  }
+                                },
                               ),
                             ),
                             // gap between items (10px), don't add after last item

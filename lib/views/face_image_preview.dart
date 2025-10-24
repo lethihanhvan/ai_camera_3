@@ -21,6 +21,8 @@ class FaceImagePreview extends StatefulWidget {
   final int imageHeight;
   final Function onAddPeopleCallback;
   final List<imglib.Image>? faceImages;
+  // Parent may provide an async callback to delete this image entry
+  final Future<void> Function()? onDelete;
 
   const FaceImagePreview({
     Key? key,
@@ -31,6 +33,7 @@ class FaceImagePreview extends StatefulWidget {
     required this.imageHeight,
     required this.onAddPeopleCallback,
     this.faceImages,
+    this.onDelete,
   }) : super(key: key);
 
   @override
@@ -654,6 +657,29 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
     }
   }
 
+  /// Show confirmation dialog and call parent's onDelete if confirmed.
+  Future<void> _confirmAndDeleteImage() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete image?'),
+        content: const Text('Remove this image and its face items from the list?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete')),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        if (widget.onDelete != null) await widget.onDelete!();
+      } catch (e) {
+        debugPrint('onDelete callback error: $e');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final displayWidth = MediaQuery.of(context).size.width;
@@ -683,6 +709,9 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
                     child: GestureDetector(
                       behavior: HitTestBehavior.translucent,
                       onTapDown: _handleTapDown,
+                      onLongPress: () async {
+                        await _confirmAndDeleteImage();
+                      },
                       onDoubleTapDown: (details) => _doubleTapDetails = details,
                       onDoubleTap: _handleDoubleTap,
                       child: Stack(
@@ -694,18 +723,35 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
                             width: double.infinity,
                             height: double.infinity,
                           ),
-                          if (widget.facePeoples.isNotEmpty)
-                            Positioned.fill(
-                              child: CustomPaint(
-                                painter: _FacePainter(
-                                  widget.facePeoples,
-                                  imageSize: Size(widget.imageWidth.toDouble(), widget.imageHeight.toDouble()),
-                                  selectedIndex: _selectedFaceIndex,
-                                  debugTapPoint: _debugLastImagePoint,
-                                  rectsAreNormalized: widget.rectsAreNormalized,
-                                ),
-                              ),
-                            ),
+                          // Delete button overlay (top-right)
+                          // Positioned(
+                          //   top: 8,
+                          //   right: 8,
+                          //   child: Material(
+                          //     color: Colors.black45,
+                          //     shape: const CircleBorder(),
+                          //     clipBehavior: Clip.antiAlias,
+                          //     child: IconButton(
+                          //       icon: const Icon(Icons.delete, size: 20, color: Colors.white),
+                          //       tooltip: 'Delete image',
+                          //       onPressed: () async {
+                          //         await _confirmAndDeleteImage();
+                          //       },
+                          //     ),
+                          //   ),
+                          // ),
+                           if (widget.facePeoples.isNotEmpty)
+                             Positioned.fill(
+                               child: CustomPaint(
+                                 painter: _FacePainter(
+                                   widget.facePeoples,
+                                   imageSize: Size(widget.imageWidth.toDouble(), widget.imageHeight.toDouble()),
+                                   selectedIndex: _selectedFaceIndex,
+                                   debugTapPoint: _debugLastImagePoint,
+                                   rectsAreNormalized: widget.rectsAreNormalized,
+                                 ),
+                               ),
+                             ),
                         ],
                       ),
                     ),
