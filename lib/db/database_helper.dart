@@ -6,7 +6,8 @@ import 'package:sqflite/sqflite.dart';
 import '../dto/people.dart';
 
 class DatabaseHelper {
-  static const dbVersion = 1;
+  // bump database version to add `images` column
+  static const dbVersion = 2;
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
 
@@ -22,12 +23,14 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     final databasesPath = await getDatabasesPath();
-    final path = join(databasesPath, 'ai_camera${dbVersion}.db');
+    // use a stable filename (do not include version in filename) so onUpgrade runs
+    final path = join(databasesPath, 'ai_camera.db');
 
     return await openDatabase(
       path,
-      version: 1,
+      version: dbVersion,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -39,9 +42,19 @@ class DatabaseHelper {
         name TEXT NOT NULL,
         email TEXT,
         classification TEXT,
-        embeddings TEXT
+        embeddings TEXT,
+        images TEXT
       )
     ''');
+  }
+
+  FutureOr<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    // Add new columns or perform migrations here.
+    // We only need to add the `images` column when upgrading from v1 -> v2.
+    if (oldVersion < 2) {
+      // Check if column already exists is optional; SQLite will throw if it already exists.
+      await db.execute('ALTER TABLE people ADD COLUMN images TEXT');
+    }
   }
 
   // Insert a People. If a record with same id exists, it will be replaced.
@@ -113,4 +126,3 @@ class DatabaseHelper {
     }
   }
 }
-

@@ -110,40 +110,47 @@ class _HomePageState extends State<HomePage> {
 
     setState(() {
       _dbPeoples = dbPeoples;
-      _faceImages = _faceImages.map((faceImageItem) {
-        var file = File(faceImageItem.imagePath!);
-        imglib.Image convertedImage = imglib.decodeImage(file.readAsBytesSync())!;
-        faceImageItem.setFacePeoples(
-            faceImageItem.facePeoples.map((facePeople) {
-              if (facePeople.dbId != null) {
-                // already has dbId, skip
-                return facePeople;
-              }
-              double x, y, w, h;
-              var rect = facePeople.faceRect;
 
-              x = (rect.left - 10);
-              y = (rect.top - 10);
-              w = (rect.width + 20);
-              h = (rect.height + 20);
+      Future.delayed(const Duration(milliseconds: 100), () {
+        setState(() {
+          _faceImages = _faceImages.map((faceImageItem) {
+            var file = File(faceImageItem.imagePath!);
+            imglib.Image convertedImage = imglib.decodeImage(file.readAsBytesSync())!;
+            faceImageItem.setFacePeoples(
+                faceImageItem.facePeoples.map((facePeople) {
+                  // if (facePeople.dbId != null) {
+                  //   // already has dbId, skip
+                  //   return facePeople;
+                  // }
+                  double x, y, w, h;
+                  var rect = facePeople.faceRect;
 
-              imglib.Image croppedImage = imglib.copyCrop(
-                  convertedImage, x: x.round(), y: y.round(),width:  w.round(), height:  h.round());
+                  x = (rect.left - 10);
+                  y = (rect.top - 10);
+                  w = (rect.width + 20);
+                  h = (rect.height + 20);
 
-              // save cropped image for debugging
-              // final croppedFile = File('${tempDir.path}/crop_${DateTime.now().millisecondsSinceEpoch}.png');
-              // await croppedFile.writeAsBytes(imglib.encodePng(croppedImage));
-              // debugPrint("Cropped face saved at: " + croppedFile.path);
+                  imglib.Image croppedImage = imglib.copyCrop(
+                      convertedImage, x: x.round(), y: y.round(),width:  w.round(), height:  h.round());
 
-              List<double> embeddingData = buildEmbeddingData(croppedImage);
-              String? dbId = detectPeopleByDBAndEmbedding(croppedImage, embeddingData);
-              facePeople.dbId = dbId;
-              return facePeople;
-            }).toList()
-        );
-        return faceImageItem;
-      }).toList();
+                  // save cropped image for debugging
+                  // final croppedFile = File('${tempDir.path}/crop_${DateTime.now().millisecondsSinceEpoch}.png');
+                  // await croppedFile.writeAsBytes(imglib.encodePng(croppedImage));
+                  // debugPrint("Cropped face saved at: " + croppedFile.path);
+
+                  List<double> embeddingData = buildEmbeddingData(croppedImage);
+                  String? dbId = detectPeopleByDBAndEmbedding(croppedImage, embeddingData);
+                  facePeople.dbId = dbId;
+                  return facePeople;
+                }).toList()
+            );
+            return faceImageItem;
+          }).toList();
+        });
+      });
     });
+
+
   }
 
 

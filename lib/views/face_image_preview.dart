@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:vector_math/vector_math_64.dart' show Vector3, Matrix4;
-import 'package:uuid/uuid.dart';
 import 'package:image/image.dart' as imglib;
+import 'package:uuid/uuid.dart';
+import 'package:vector_math/vector_math_64.dart' show Vector3, Matrix4;
 
 import '../db/database_helper.dart';
 import '../dto/face_people.dart';
@@ -13,6 +13,7 @@ import '../dto/people.dart';
 
 class FaceImagePreview extends StatefulWidget {
   final String imagePath;
+
   // final List<Rect> faceRects;
   final List<FacePeople> facePeoples;
   final bool rectsAreNormalized; // true if rects are in 0..1 normalized coordinates
@@ -70,10 +71,16 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
     }
   }
 
-  Future<void> _addPeopleInformation(String? uuidInput, String name, String studentId, String? email, String classification,
-      List<double>? embedding) async {
+  Future<void> _addPeopleInformation(
+    String? uuidInput,
+    String name,
+    String studentId,
+    String? email,
+    String classification,
+    List<double>? embedding,
+    Uint8List? image,
+  ) async {
     if (uuidInput == null || uuidInput.isEmpty) {
-
       // add new person
       // create an example People
       final people = People(
@@ -83,18 +90,17 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
         email: email,
         classification: classification,
         embeddings: (embedding == null || embedding.isEmpty) ? [] : [embedding],
+        images: (image == null) ? [] : [image],
       );
 
       // insert
       await DatabaseHelper().insertPeople(people);
+      widget.onAddPeopleCallback();
       // show a simple confirmation
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Saved ${people.name} successfully!')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saved ${people.name} successfully!')));
       }
     } else {
-
       // update existing person
       final existing = await DatabaseHelper().getPeopleById(uuidInput);
       if (existing != null) {
@@ -104,6 +110,11 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
           updatedEmbeddings.add(embedding);
         }
 
+        final updatedImages = List<Uint8List>.from(existing.images);
+        if (image != null) {
+          updatedImages.add(image);
+        }
+
         final updatedPeople = People(
           id: existing.id,
           name: name,
@@ -111,47 +122,46 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
           email: email,
           classification: classification,
           embeddings: updatedEmbeddings,
+          images: updatedImages,
         );
 
         // update in database
         await DatabaseHelper().updatePeople(updatedPeople);
+        widget.onAddPeopleCallback();
         // show a simple confirmation
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Updated ${updatedPeople.name} successfully!')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Updated ${updatedPeople.name} successfully!')));
         }
       }
     }
 
-    widget.onAddPeopleCallback();
 
 
-//     // create an example People
-//     final people = People(
-//       id: Uuid().v4(),
-//       name: 'Alice Example',
-//       studentId: 'S12345',
-//       email: 'alice@example.com',
-//       classification: 'student',
-//       embeddings: [
-//         [0.1, 0.2, 0.3], // embedding vectors (List<double>)
-//         [0.4, 0.5, 0.6],
-//       ],
-//     );
-//
-// // insert
-//     await DatabaseHelper().insertPeople(people);
-//
-// // fetch single using the same id we generated
-//     final loaded = await DatabaseHelper().getPeopleById(people.id);
-//     debugPrint('Loaded person: ${loaded?.toJson()}');
-//
-// // fetch all
-//     final all = await DatabaseHelper().getAllPeople();
-//     debugPrint('All people count: ${all.length}');
-
-
+    //     // create an example People
+    //     final people = People(
+    //       id: Uuid().v4(),
+    //       name: 'Alice Example',
+    //       studentId: 'S12345',
+    //       email: 'alice@example.com',
+    //       classification: 'student',
+    //       embeddings: [
+    //         [0.1, 0.2, 0.3], // embedding vectors (List<double>)
+    //         [0.4, 0.5, 0.6],
+    //       ],
+    //     );
+    //
+    // // insert
+    //     await DatabaseHelper().insertPeople(people);
+    //
+    // // fetch single using the same id we generated
+    //     final loaded = await DatabaseHelper().getPeopleById(people.id);
+    //     debugPrint('Loaded person: ${loaded?.toJson()}');
+    //
+    // // fetch all
+    //     final all = await DatabaseHelper().getAllPeople();
+    //     debugPrint('All people count: ${all.length}');
   }
 
   // New: handle tap down to detect which face rect was tapped
@@ -160,7 +170,9 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
     // then to the scene (child) coordinates, convert that to image pixel coordinates and test
     // against face rects (which must be either normalized or image-pixel coords depending on
     // `rectsAreNormalized`). This avoids mixing viewport and scene spaces.
-    final RenderBox ivBox = _interactiveViewerKey.currentContext?.findRenderObject() as RenderBox? ?? context.findRenderObject() as RenderBox;
+    final RenderBox ivBox =
+        _interactiveViewerKey.currentContext?.findRenderObject() as RenderBox? ??
+        context.findRenderObject() as RenderBox;
     final Offset viewportPoint = ivBox.globalToLocal(details.globalPosition);
     final Offset scenePoint = _transformationController.toScene(viewportPoint);
 
@@ -186,7 +198,12 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
     for (var i = 0; i < widget.facePeoples.length; i++) {
       final r0 = widget.facePeoples[i].faceRect;
       final Rect rImage = normalizedRects
-          ? Rect.fromLTRB(r0.left * imageSize.width, r0.top * imageSize.height, r0.right * imageSize.width, r0.bottom * imageSize.height)
+          ? Rect.fromLTRB(
+              r0.left * imageSize.width,
+              r0.top * imageSize.height,
+              r0.right * imageSize.width,
+              r0.bottom * imageSize.height,
+            )
           : r0;
       if (rImage.inflate(hitInflateImage).contains(imagePoint)) {
         hitIndex = i;
@@ -195,11 +212,18 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
     }
 
     if (hitIndex == null) {
-      debugPrint('No hit. viewportPoint=$viewportPoint scenePoint=$scenePoint imagePoint=$imagePoint normalizedRects=$normalizedRects');
+      debugPrint(
+        'No hit. viewportPoint=$viewportPoint scenePoint=$scenePoint imagePoint=$imagePoint normalizedRects=$normalizedRects',
+      );
       for (var i = 0; i < widget.facePeoples.length; i++) {
         final r0 = widget.facePeoples[i].faceRect;
         final Rect rImage = normalizedRects
-            ? Rect.fromLTRB(r0.left * imageSize.width, r0.top * imageSize.height, r0.right * imageSize.width, r0.bottom * imageSize.height)
+            ? Rect.fromLTRB(
+                r0.left * imageSize.width,
+                r0.top * imageSize.height,
+                r0.right * imageSize.width,
+                r0.bottom * imageSize.height,
+              )
             : r0;
         debugPrint(' rect[$i]=imageRect=$rImage');
       }
@@ -220,7 +244,6 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
 
   // Show dialog to add or update People. If faceIndex is provided, prefill name with a helpful placeholder.
   Future<void> showPeopleInformationDialog({int? faceIndex}) async {
-
     final uuidController = TextEditingController();
     final nameController = TextEditingController(text: faceIndex != null ? '' : '');
     final studentIdController = TextEditingController();
@@ -346,14 +369,8 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
               child: AlertDialog(
                 title: Column(
                   children: [
-                    if (facePreview != null) ...[
-                      facePreview,
-                      const SizedBox(height: 12),
-                    ],
-                    const Text(
-                      'Save People Information',
-                      style: TextStyle(fontSize: 16),
-                    ),
+                    if (facePreview != null) ...[facePreview, const SizedBox(height: 12)],
+                    const Text('Save People Information', style: TextStyle(fontSize: 16)),
                   ],
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -403,17 +420,40 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
                             labelStyle: const TextStyle(fontSize: 14),
                             prefixIcon: const Icon(Icons.people, size: 20),
                             isDense: true,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                           ),
                           items: allPeople.map((person) {
                             return DropdownMenuItem<People>(
                               value: person,
-                              child: Text(
-                                '${person.name} (${person.classification ?? "N/A"})',
-                                style: const TextStyle(fontSize: 14),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    '${person.name} (${person.classification ?? "N/A"})',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                  person.images.isNotEmpty
+                                      ? Row(
+                                    children: [
+                                      ...person.images.take(5).map((imgBytes) => Padding(
+                                        padding: const EdgeInsets.only(left: 8.0),
+                                        child: Container(
+                                          width: 30,
+                                          height: 30,
+                                          // decoration: BoxDecoration(
+                                          //   borderRadius: BorderRadius.circular(4),
+                                          //   border: Border.all(color: Colors.grey, width: 1),
+                                          // ),
+                                          child: CircleAvatar(
+                                            radius: 12,
+                                            backgroundImage: MemoryImage(imgBytes),
+                                          ),
+                                        ),
+                                      )),
+                                    ],
+                                  )
+                                      : const SizedBox.shrink(),
+                                ],
                               ),
                             );
                           }).toList(),
@@ -482,12 +522,9 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
                   ),
                 ),
                 actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
-                  ),
+                  TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
                   FilledButton(
-                    onPressed: () {
+                    onPressed: () async {
                       final uuidInput = uuidController.text.trim();
                       final name = nameController.text.trim();
                       final studentId = studentIdController.text.trim();
@@ -495,9 +532,9 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
                       final classification = classificationController.text.trim();
 
                       if (name.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please enter a name')),
-                        );
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(const SnackBar(content: Text('Please enter a name')));
                         return;
                       }
 
@@ -509,6 +546,7 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
                         email,
                         classification,
                         faceIndex != null ? widget.facePeoples[faceIndex].embedding : null,
+                        await facePreviewAsBytes(faceIndex!),
                       );
                     },
                     child: const Text('Save'),
@@ -543,9 +581,7 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
         hintStyle: const TextStyle(fontSize: 16),
         prefixIcon: Icon(icon, size: 20),
         isDense: false,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: Colors.grey, width: 1),
@@ -559,6 +595,63 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       ),
     );
+  }
+
+  /// Return a PNG `Uint8List` for the face preview at [faceIndex].
+  ///
+  /// Uses `widget.faceImages` (pre-cropped imglib.Image) when available.
+  /// Falls back to decoding and cropping the original image at `widget.imagePath`.
+  /// Returns null if the index is invalid or an error occurs.
+  Future<Uint8List?> facePreviewAsBytes(int faceIndex) async {
+    try {
+      if (faceIndex < 0 || faceIndex >= widget.facePeoples.length) return null;
+
+      // If the pre-cropped images are available, encode that image to PNG bytes.
+      if (widget.faceImages != null && faceIndex < widget.faceImages!.length) {
+        final img = widget.faceImages![faceIndex];
+        return Uint8List.fromList(imglib.encodePng(img));
+      }
+
+      // Fallback: decode and crop original image file
+      final file = File(widget.imagePath);
+      if (!file.existsSync()) return null;
+      final bytes = await file.readAsBytes();
+      final im = imglib.decodeImage(bytes);
+      if (im == null) return null;
+
+      // Determine crop rectangle in pixel coordinates
+      Rect r = widget.facePeoples[faceIndex].faceRect;
+      bool normalized = widget.rectsAreNormalized;
+      int x, y, w, h;
+
+      if (normalized) {
+        x = (r.left * im.width).round();
+        y = (r.top * im.height).round();
+        w = ((r.right - r.left) * im.width).round();
+        h = ((r.bottom - r.top) * im.height).round();
+      } else {
+        x = r.left.round();
+        y = r.top.round();
+        w = r.width.round();
+        h = r.height.round();
+      }
+
+      // Optionally add a small padding so the face isn't tight to border (same as other code)
+      const int pad = 10;
+      x = (x - pad).clamp(0, im.width - 1);
+      y = (y - pad).clamp(0, im.height - 1);
+      w = (w + pad * 2).clamp(0, im.width - x);
+      h = (h + pad * 2).clamp(0, im.height - y);
+
+      // Ensure width/height at least 1
+      if (w <= 0 || h <= 0) return null;
+
+      final cropped = imglib.copyCrop(im, x: x, y: y, width: w, height: h);
+      return Uint8List.fromList(imglib.encodePng(cropped));
+    } catch (e) {
+      debugPrint('facePreviewAsBytes error: $e');
+      return null;
+    }
   }
 
   @override
@@ -613,7 +706,6 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
                                 ),
                               ),
                             ),
-
                         ],
                       ),
                     ),
@@ -645,10 +737,16 @@ class _FacePainter extends CustomPainter {
   final Offset? debugTapPoint;
   final bool rectsAreNormalized;
 
-  _FacePainter(this.facePeoples, {required this.imageSize, this.selectedIndex, this.debugTapPoint, required this.rectsAreNormalized});
+  _FacePainter(
+    this.facePeoples, {
+    required this.imageSize,
+    this.selectedIndex,
+    this.debugTapPoint,
+    required this.rectsAreNormalized,
+  });
 
   @override
-   void paint(Canvas canvas, Size size) {
+  void paint(Canvas canvas, Size size) {
     final strokePaint = Paint()
       ..color = Colors.red.withAlpha(200)
       ..style = PaintingStyle.stroke
@@ -708,7 +806,6 @@ class _FacePainter extends CustomPainter {
         } else {
           canvas.drawRect(paintedRect, strokePaint);
         }
-
       }
 
       // draw index label for debugging
@@ -734,15 +831,16 @@ class _FacePainter extends CustomPainter {
     //   tp.layout();
     //   tp.paint(canvas, Offset(dxp + 6, dyp - 6));
     // }
-   }
+  }
 
-   @override
-   bool shouldRepaint(covariant _FacePainter oldDelegate) =>
-       facePeoples != oldDelegate.facePeoples ||
-           imageSize != oldDelegate.imageSize
-       || selectedIndex != oldDelegate.selectedIndex || debugTapPoint != oldDelegate.debugTapPoint;
+  @override
+  bool shouldRepaint(covariant _FacePainter oldDelegate) =>
+      facePeoples != oldDelegate.facePeoples ||
+      imageSize != oldDelegate.imageSize ||
+      selectedIndex != oldDelegate.selectedIndex ||
+      debugTapPoint != oldDelegate.debugTapPoint;
 
   // @override
   // bool shouldRepaint(covariant _FacePainter oldDelegate) =>
   //     true;
- }
+}
