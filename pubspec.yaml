@@ -37,10 +37,22 @@ dependencies:
   sqflite: ^2.2.8
   path: ^1.8.3
   uuid: ^3.0.6
-  excel: ^4.0.6
-  open_file: ^3.5.10
   syncfusion_flutter_xlsio: ^29.2.11
   permission_handler: ^12.0.1
+  photo_manager: ^3.7.1
+  google_mlkit_face_detection: ^0.12.0
+  camera: ^0.11.0+1     # For camera preview & capture
+  image: ^4.2.0         # For image manipulation (optional)
+  path_provider: ^2.0.15 # To save captured images
+  image_picker: ^1.0.4  # To pick images from gallery
+  tflite_flutter: ^0.11.0 # For TensorFlow Lite model inference
+  #  tflite_flutter:
+  #    path: ./tflite_flutter-0.6.0
+  #  tflite_flutter: 0.7.0
+  wechat_assets_picker: ^9.8.0
+  open_file: ^3.5.10
+  excel: ^4.0.6
+  heic_to_png_jpg: ^0.0.5
 
 dev_dependencies:
   flutter_test:
@@ -52,18 +64,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
-  camera: ^0.11.0+1     # For camera preview & capture
-  google_mlkit_face_detection: ^0.12.0 # For face detection/counting (Google ML Kit)
-  image: ^4.2.0         # For image manipulation (optional)
-  path_provider: ^2.0.15 # To save captured images
-  image_picker: ^1.0.4  # To pick images from gallery
-  tflite_flutter: ^0.11.0 # For TensorFlow Lite model inference
-#  tflite_flutter:
-#    path: ./tflite_flutter-0.6.0
-#  tflite_flutter: 0.7.0
-  wechat_assets_picker: ^9.8.0
-  open_file: ^3.5.10
-  excel: ^4.0.6
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

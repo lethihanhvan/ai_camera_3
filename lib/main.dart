@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:ai_camera/utils/face_utils.dart';
 import 'package:ai_camera/views/exported_files_page.dart';
@@ -15,6 +16,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
 import 'views/found_people_page.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:heic_to_png_jpg/heic_to_png_jpg.dart';
 
 import 'db/database_helper.dart';
 import 'dto/face_people.dart';
@@ -292,33 +294,42 @@ class _HomePageState extends State<HomePage> {
 
     if (result != null) {
       for (var asset in result) {
-        final file = await asset.file;
+        File? file = await asset.file;
         if (file != null) {
-          final imagePath = file.path;
-          final decodedImage = await decodeImageFromList(file.readAsBytesSync());
+          String imagePath = file.path;
+          // Check for HEIC extension
+          late Uint8List imageData;
+          if (imagePath.toLowerCase().endsWith('.heic')) {
+            Uint8List heicData = await file.readAsBytes();
+            // Convert HEIC to JPG
+            imageData = await HeicConverter.convertToJPG(
+              heicData: heicData,
+              quality: 80,
+            );
+
+          } else {
+            imageData = file.readAsBytesSync();
+          }
+          final decodedImage = await decodeImageFromList(imageData);
           final imageWidth = decodedImage.width;
           final imageHeight = decodedImage.height;
           List<Rect> rects = await detectFaces(imagePath);
           List<imglib.Image> faceCrops = [];
-          imglib.Image convertedImage = imglib.decodeImage(file.readAsBytesSync())!;
+          imglib.Image? convertedImage = imglib.decodeImage(imageData);
+          if (convertedImage == null) {
+            debugPrint('Failed to decode image: $imagePath');
+            continue;
+          }
           List<FacePeople> facePeoples = [];
           for (var rect in rects) {
             double x, y, w, h;
-
             x = (rect.left - 10);
             y = (rect.top - 10);
             w = (rect.width + 20);
             h = (rect.height + 20);
-
             imglib.Image croppedImage = imglib.copyCrop(
                 convertedImage, x: x.round(), y: y.round(),width:  w.round(), height:  h.round());
             faceCrops.add(croppedImage);
-
-            // save cropped image for debugging
-            // final croppedFile = File('${tempDir.path}/crop_${DateTime.now().millisecondsSinceEpoch}.png');
-            // await croppedFile.writeAsBytes(imglib.encodePng(croppedImage));
-            // debugPrint("Cropped face saved at: " + croppedFile.path);
-
             List<double> embeddingData = buildEmbeddingData(croppedImage);
             String? peopleId = detectPeopleByDBAndEmbedding(croppedImage, embeddingData);
             debugPrint("Recognition Result: ${peopleId ?? "N/a"}");

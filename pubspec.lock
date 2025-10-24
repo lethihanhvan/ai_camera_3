@@ -26,7 +26,7 @@ packages:
     source: hosted
     version: "2.1.2"
   camera:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: camera
       sha256: d6ec2cbdbe2fa8f5e0d07d8c06368fe4effa985a4a5ddade9cc58a8cd849557d
@@ -241,13 +241,29 @@ packages:
     source: hosted
     version: "0.9.0"
   google_mlkit_face_detection:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: google_mlkit_face_detection
       sha256: "65988405c884fd84a4ccc8bded7b5e3e4c33362f6f4eaaa94818bdaaba7bab7d"
       url: "https://pub.dev"
     source: hosted
     version: "0.12.0"
+  heic_to_png_jpg:
+    dependency: "direct main"
+    description:
+      name: heic_to_png_jpg
+      sha256: cd4038a1b194c70d0a665e85a8d32a7b7a0d554baa5f0fe833f8cafbb0c7b792
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.5"
+  heif_converter:
+    dependency: transitive
+    description:
+      name: heif_converter
+      sha256: a2fbbf3f795b19753d84a52223c60d3bcf3cf2261d6c0d41857f0ec198e6eef3
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   html:
     dependency: transitive
     description:
@@ -281,7 +297,7 @@ packages:
     source: hosted
     version: "4.1.2"
   image:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: image
       sha256: f31d52537dc417fdcde36088fdf11d191026fd5e4fae742491ebd40e5a8bea7d
@@ -289,7 +305,7 @@ packages:
     source: hosted
     version: "4.3.0"
   image_picker:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: image_picker
       sha256: "021834d9c0c3de46bf0fe40341fa07168407f694d9b2bb18d532dc1261867f7a"
@@ -521,7 +537,7 @@ packages:
     source: hosted
     version: "1.9.1"
   path_provider:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: path_provider
       sha256: "50c5dd5b6e1aaf6fb3a78b33f6aa3afca52bf903a8a5298f53101fdaee55bbcd"
@@ -625,7 +641,7 @@ packages:
     source: hosted
     version: "7.0.1"
   photo_manager:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: photo_manager
       sha256: a0d9a7a9bc35eda02d33766412bde6d883a8b0acb86bbe37dac5f691a0894e8a
@@ -806,7 +822,7 @@ packages:
     source: hosted
     version: "0.7.6"
   tflite_flutter:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: tflite_flutter
       sha256: "48e6fde2ad97162bb66a16a142f4c4698add9e8cd397ce9d1cc7451b55537ac1"
@@ -902,7 +918,7 @@ packages:
     source: hosted
     version: "1.1.1"
   wechat_assets_picker:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: wechat_assets_picker
       sha256: c307e50394c1e6dfcd5c4701e84efb549fce71444fedcf2e671c50d809b3e2a1
