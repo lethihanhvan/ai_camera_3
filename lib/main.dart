@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:ai_camera/utils/face_utils.dart';
 import 'package:ai_camera/views/exported_files_page.dart';
 import 'package:ai_camera/views/face_image_preview.dart';
+import 'package:ai_camera/views/import_export_page.dart';
 import 'package:flutter/material.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
@@ -384,7 +385,48 @@ class _HomePageState extends State<HomePage> {
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('AI Camera Detection')),
+      appBar: AppBar(
+        title: const Text('AI Camera Detection'),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Settings',
+            onSelected: (value) {
+              if (value == 'import_export') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ImportExportPage()),
+                );
+              } else if (value == 'report_files') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ExportedFilesPage()),
+                );
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem<String>(
+                value: 'import_export',
+                child: Row(
+                  children: [
+                    Icon(Icons.import_export, size: 20),
+                    SizedBox(width: 12),
+                    Text('Import/Export Data'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'report_files',
+                child: Row(
+                  children: [
+                    Icon(Icons.folder_outlined, size: 20),
+                    SizedBox(width: 12),
+                    Text('Report Files'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -484,18 +526,6 @@ class _HomePageState extends State<HomePage> {
                     child: const SizedBox(
                       width: double.infinity,
                       child: Center(child: Text('Show Found People')),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  OutlinedButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const ExportedFilesPage()),
-                      );
-                    },
-                    child: const SizedBox(
-                      width: double.infinity,
-                      child: Center(child: Text('Report Files')),
                     ),
                   ),
                   // optionally keep camera button

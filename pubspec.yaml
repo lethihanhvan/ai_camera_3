@@ -53,6 +53,7 @@ dependencies:
   open_file: ^3.5.10
   excel: ^4.0.6
   heic_to_png_jpg: ^0.0.5
+  file_picker: ^8.1.4
 
 dev_dependencies:
   flutter_test:
