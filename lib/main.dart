@@ -7,6 +7,7 @@ import 'package:ai_camera/utils/face_utils.dart';
 import 'package:ai_camera/views/exported_files_page.dart';
 import 'package:ai_camera/views/face_image_preview.dart';
 import 'package:ai_camera/views/import_export_page.dart';
+import 'package:ai_camera/views/manage_people_page.dart';
 import 'package:flutter/material.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
@@ -386,7 +387,7 @@ class _HomePageState extends State<HomePage> {
     }
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Camera Detection'),
+        title: const Text('AI People Detection'),
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.settings),
@@ -400,9 +401,24 @@ class _HomePageState extends State<HomePage> {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const ExportedFilesPage()),
                 );
+              } else if (value == 'manage_people') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ManagePeoplePage()),
+                );
               }
             },
+
             itemBuilder: (BuildContext context) => [
+              const PopupMenuItem<String>(
+                value: 'manage_people',
+                child: Row(
+                  children: [
+                    Icon(Icons.people, size: 20),
+                    SizedBox(width: 12),
+                    Text('Manage People'),
+                  ],
+                ),
+              ),
               const PopupMenuItem<String>(
                 value: 'import_export',
                 child: Row(
