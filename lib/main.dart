@@ -34,8 +34,44 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Camera Demo',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      title: 'AI Face Recognition',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF6366F1), // Indigo
+          brightness: Brightness.light,
+        ),
+        appBarTheme: const AppBarTheme(
+          centerTitle: false,
+          elevation: 0,
+          scrolledUnderElevation: 2,
+        ),
+        cardTheme: CardThemeData(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.grey.shade200),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+      ),
       home: const HomePage(),
     );
   }
@@ -372,193 +408,430 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Camera Capture Demo')),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              CircularProgressIndicator(),
-              SizedBox(height: 20),
-              Text('Loading model, please wait...'),
-            ],
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+              ],
+            ),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.face_retouching_natural,
+                        size: 64,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(height: 24),
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Initializing AI Model',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade800,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Please wait...',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );
     }
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI People Detection'),
+        title: Row(
+          children: [
+            Icon(Icons.face_retouching_natural,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'AI Face Recognition',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
         actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.settings),
+          IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.settings_outlined,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
             tooltip: 'Settings',
-            onSelected: (value) {
-              if (value == 'import_export') {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const ImportExportPage()),
-                );
-              } else if (value == 'report_files') {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const ExportedFilesPage()),
-                );
-              } else if (value == 'manage_people') {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const ManagePeoplePage()),
-                );
-              }
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                builder: (context) => Container(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          children: [
+                            Icon(Icons.settings, color: Theme.of(context).colorScheme.primary),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Settings',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.people),
+                        title: const Text('Manage People'),
+                        subtitle: const Text('View, edit, and delete people'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const ManagePeoplePage()),
+                          );
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.import_export),
+                        title: const Text('Import/Export Data'),
+                        subtitle: const Text('Backup and restore database'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const ImportExportPage()),
+                          );
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.folder_outlined),
+                        title: const Text('Report Files'),
+                        subtitle: const Text('View exported reports'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const ExportedFilesPage()),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
             },
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Theme.of(context).colorScheme.primary.withOpacity(0.05),
+              Colors.white,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Stats header
+              if (_faceImages.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Theme.of(context).colorScheme.primary,
+                        Theme.of(context).colorScheme.secondary,
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildStatItem(
+                        icon: Icons.photo_library,
+                        label: 'Images',
+                        value: '${_faceImages.length}',
+                      ),
+                      Container(
+                        width: 1,
+                        height: 40,
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                      _buildStatItem(
+                        icon: Icons.face,
+                        label: 'Faces',
+                        value: '${_faceImages.fold<int>(0, (sum, img) => sum + img.facePeoples.length)}',
+                      ),
+                      Container(
+                        width: 1,
+                        height: 40,
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                      _buildStatItem(
+                        icon: Icons.person,
+                        label: 'People',
+                        value: '${_dbPeoples.length}',
+                      ),
+                    ],
+                  ),
+                ),
 
-            itemBuilder: (BuildContext context) => [
-              const PopupMenuItem<String>(
-                value: 'manage_people',
-                child: Row(
-                  children: [
-                    Icon(Icons.people, size: 20),
-                    SizedBox(width: 12),
-                    Text('Manage People'),
+              // Scrollable area for previews
+              Expanded(
+                child: _faceImages.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(32),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.photo_library_outlined,
+                                size: 64,
+                                color: Colors.grey.shade400,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            Text(
+                              'No Images Selected',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Tap "Pick Images" to get started',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        key: Key('main_column_$timeKey'),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        itemCount: _faceImages.length,
+                        itemBuilder: (context, i) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: FaceImagePreview(
+                              imagePath: _faceImages[i].imagePath!,
+                              facePeoples: _faceImages[i].facePeoples,
+                              imageWidth: _faceImages[i].imageWidth!,
+                              imageHeight: _faceImages[i].imageHeight!,
+                              faceImages: _faceImages[i].faceImages,
+                              onAddPeopleCallback: () async {
+                                await reloadDbPeoples();
+                              },
+                              onDelete: () async {
+                                setState(() {
+                                  if (i >= 0 && i < _faceImages.length) {
+                                    _faceImages.removeAt(i);
+                                  }
+                                });
+                                await reloadDbPeoples();
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: const Text('Image removed'),
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                          );
+                        },
+                      ),
+              ),
+
+              // Bottom action buttons
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -4),
+                    ),
                   ],
                 ),
-              ),
-              const PopupMenuItem<String>(
-                value: 'import_export',
-                child: Row(
-                  children: [
-                    Icon(Icons.import_export, size: 20),
-                    SizedBox(width: 12),
-                    Text('Import/Export Data'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem<String>(
-                value: 'report_files',
-                child: Row(
-                  children: [
-                    Icon(Icons.folder_outlined, size: 20),
-                    SizedBox(width: 12),
-                    Text('Report Files'),
-                  ],
+                child: SafeArea(
+                  top: false,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton.icon(
+                          onPressed: _openImagePickers,
+                          icon: const Icon(Icons.add_photo_alternate),
+                          label: const Text(
+                            'Pick Images',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            elevation: 0,
+                            shadowColor: Colors.transparent,
+                          ),
+                        ),
+                      ),
+                      if (_faceImages.isNotEmpty) const SizedBox(height: 12),
+                      if (_faceImages.isNotEmpty)
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              final mapData = listAndShowFoundPeople();
+                              final found = mapData["people"] as List<People>;
+                              final List<String> imagePaths = mapData["imagesPaths"] as List<String>;
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => FoundPeoplePage(
+                                    people: found,
+                                    imagesPaths: imagePaths,
+                                  ),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.people_alt),
+                            label: const Text(
+                              'Show Found People',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
-        ],
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // scrollable area for previews
-            Expanded(
-              child: SingleChildScrollView(
-                key: Key('main_column_$timeKey'),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // if (_imagePath != null && _imageWidth != null && _imageHeight != null)
-                    //   FaceImagePreview(
-                    //     imagePath: _imagePath!,
-                    //     faceRects: _faceRects ?? [],
-                    //     imageWidth: _imageWidth!,
-                    //     imageHeight: _imageHeight!,
-                    //   )
-                    // else
-                    //   const Text('No image captured'),
-
-                    if (_faceImages.isNotEmpty)
-                      Column(
-                        children: [
-                          for (var i = 0; i < _faceImages.length; i++) ...[
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 0.0),
-                              child: FaceImagePreview(
-                                imagePath: _faceImages[i].imagePath!,
-                                // faceRects: _faceImages[i].faceRects!,
-                                facePeoples: _faceImages[i].facePeoples,
-                                imageWidth: _faceImages[i].imageWidth!,
-                                imageHeight: _faceImages[i].imageHeight!,
-                                faceImages: _faceImages[i].faceImages,
-                                onAddPeopleCallback: () async {
-                                  await reloadDbPeoples();
-                                },
-                                onDelete: () async {
-                                  // capture current index
-                                  final idx = i;
-                                  // remove the image entry and refresh state
-                                  setState(() {
-                                    if (idx >= 0 && idx < _faceImages.length) {
-                                      _faceImages.removeAt(idx);
-                                    }
-                                  });
-                                  await reloadDbPeoples();
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Image removed')),
-                                    );
-                                  }
-                                },
-                              ),
-                            ),
-                            // gap between items (10px), don't add after last item
-                            if (i != _faceImages.length - 1) const SizedBox(height: 10),
-                          ],
-                        ],
-                      )
-                    else
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 40.0),
-                        child: Text('No images selected'),
-                      ),
-                    const SizedBox(height: 8),
-                    // keep some bottom spacing so last preview isn't obscured by button
-                    const SizedBox(height: 80),
-                  ],
-                ),
-              ),
-            ),
-
-            // bottom fixed area for the buttons
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12.0),
-              color: Colors.transparent,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ElevatedButton(
-                    onPressed: _openImagePickers,
-                    child: const SizedBox(
-                      width: double.infinity,
-                      child: Center(child: Text('Pick Images')),
-                    ),
-                  ),
-                  if (_faceImages.isNotEmpty) const SizedBox(height: 8),
-                  if (_faceImages.isNotEmpty)  OutlinedButton(
-                    onPressed: () {
-                      final mapData = listAndShowFoundPeople();
-                      final found = mapData["people"] as List<People>;
-                      final List<String> imagePaths = mapData["imagesPaths"] as List<String>;
-                      Navigator.of(context).push(MaterialPageRoute(builder: (_) => FoundPeoplePage(people: found, imagesPaths: imagePaths)));
-                    },
-                    child: const SizedBox(
-                      width: double.infinity,
-                      child: Center(child: Text('Show Found People')),
-                    ),
-                  ),
-                  // optionally keep camera button
-                  // const SizedBox(height: 8),
-                  // OutlinedButton(
-                  //   onPressed: _openCamera,
-                  //   child: const SizedBox(
-                  //     width: double.infinity,
-                  //     child: Center(child: Text('Open Camera')),
-                  //   ),
-                  // ),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildStatItem({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.white, size: 28),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.9),
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 }
