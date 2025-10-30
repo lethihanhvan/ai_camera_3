@@ -45,125 +45,356 @@ class _ImportExportPageState extends State<ImportExportPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Import/Export People Data'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        title: Row(
           children: [
-            const Text(
-              'Manage People Database',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Icon(
+              Icons.import_export,
+              color: Theme.of(context).colorScheme.primary,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(width: 12),
             const Text(
-              'Export all people data to JSON or import from JSON file. When importing, existing people will be merged based on ID.',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              'Import/Export Data',
+              style: TextStyle(fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 24),
-            
-            // Permission Warning
-            if (!_hasStoragePermission)
-              Container(
-                padding: const EdgeInsets.all(12),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.shade200),
+          ],
+        ),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Theme.of(context).colorScheme.primary.withOpacity(0.05),
+              Colors.white,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Header card
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.cloud_sync,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 28,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Manage Database',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Backup and restore your data',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Divider(height: 1),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Export all people data to JSON or import from a backup file. When importing, existing records will be merged based on ID.',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade700,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
+
+                const SizedBox(height: 24),
+
+                // Export Button
+                Container(
+                  height: 120,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Theme.of(context).colorScheme.primary,
+                        Theme.of(context).colorScheme.secondary,
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _isLoading ? null : _exportToJson,
+                      borderRadius: BorderRadius.circular(16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.upload_file,
+                                color: Colors.white,
+                                size: 32,
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Text(
+                                    'Export to JSON',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Create a backup file',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.9),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(
+                              Icons.arrow_forward_ios,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Import Button
+                Container(
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Theme.of(context).colorScheme.primary, width: 2),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _isLoading ? null : _importFromJson,
+                      borderRadius: BorderRadius.circular(16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.download,
+                                color: Theme.of(context).colorScheme.primary,
+                                size: 32,
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Import from JSON',
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Restore from backup',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              Icons.arrow_forward_ios,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Status Message
+                if (_isLoading)
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+
+                if (_statusMessage != null && !_isLoading)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700, size: 20),
-                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.blue.shade700,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Storage permission required',
+                            _statusMessage!,
                             style: TextStyle(
-                              color: Colors.orange.shade900,
-                              fontWeight: FontWeight.bold,
+                              color: Colors.blue.shade900,
                               fontSize: 14,
+                              height: 1.5,
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'To export files, this app needs storage access permission.',
-                      style: TextStyle(
-                        color: Colors.orange.shade900,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: () async {
-                        await openAppSettings();
-                        await _checkPermissions();
-                      },
-                      icon: const Icon(Icons.settings, size: 18),
-                      label: const Text('Open Settings'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.orange.shade700,
-                        side: BorderSide(color: Colors.orange.shade700),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-            // Export Button
-            ElevatedButton.icon(
-              onPressed: _isLoading ? null : _exportToJson,
-              icon: const Icon(Icons.upload_file),
-              label: const Text('Export to JSON'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            // Import Button
-            OutlinedButton.icon(
-              onPressed: _isLoading ? null : _importFromJson,
-              icon: const Icon(Icons.download),
-              label: const Text('Import from JSON'),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-            ),
-            
-            const SizedBox(height: 24),
-            
-            // Status Message
-            if (_isLoading)
-              const Center(
-                child: CircularProgressIndicator(),
-              ),
-            
-            if (_statusMessage != null && !_isLoading)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.shade200),
-                ),
-                child: Text(
-                  _statusMessage!,
-                  style: TextStyle(
-                    color: Colors.blue.shade900,
-                    fontSize: 14,
                   ),
-                ),
-              ),
-          ],
+
+                // Permission Warning
+                if (!_hasStoragePermission)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(top: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.orange.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700, size: 24),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Storage permission required',
+                                style: TextStyle(
+                                  color: Colors.orange.shade900,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'To export files, this app needs storage access permission.',
+                          style: TextStyle(
+                            color: Colors.orange.shade900,
+                            fontSize: 14,
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          height: 44,
+                          child: OutlinedButton.icon(
+                            onPressed: () async {
+                              await openAppSettings();
+                              await _checkPermissions();
+                            },
+                            icon: const Icon(Icons.settings, size: 18),
+                            label: const Text('Open Settings'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.orange.shade700,
+                              side: BorderSide(color: Colors.orange.shade700, width: 2),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );

@@ -351,22 +351,42 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage People'),
+        title: Row(
+          children: [
+            Icon(
+              Icons.people,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Manage People',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
+          preferredSize: const Size.fromHeight(70),
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Search people...',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.primary),
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
               onChanged: (value) {
                 setState(() => _searchQuery = value);
@@ -375,153 +395,233 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
           ),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _people.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.people_outline, size: 64, color: Colors.grey.shade400),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No people in database',
-                        style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Start by adding people from face detection',
-                        style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
-                      ),
-                    ],
-                  ),
-                )
-              : _filteredPeople.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.search_off, size: 64, color: Colors.grey.shade400),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No results found',
-                            style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Theme.of(context).colorScheme.primary.withOpacity(0.05),
+              Colors.white,
+            ],
+          ),
+        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _people.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(32),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            shape: BoxShape.circle,
                           ),
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _loadPeople,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(8),
-                        itemCount: _filteredPeople.length,
-                        itemBuilder: (context, index) {
-                          final person = _filteredPeople[index];
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              leading: CircleAvatar(
-                                radius: 28,
-                                backgroundColor: Colors.blue.shade100,
-                                child: person.images.isNotEmpty
-                                    ? ClipOval(
-                                        child: Image.memory(
-                                          person.images.first,
-                                          width: 56,
-                                          height: 56,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
-                                            return Icon(Icons.person, size: 32, color: Colors.blue.shade700);
-                                          },
-                                        ),
-                                      )
-                                    : Icon(Icons.person, size: 32, color: Colors.blue.shade700),
-                              ),
-                              title: Text(
-                                person.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (person.studentId != null)
-                                    Text('ID: ${person.studentId}', style: const TextStyle(fontSize: 13)),
-                                  if (person.classification != null)
-                                    Text(person.classification!, style: const TextStyle(fontSize: 13)),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Icon(Icons.face, size: 14, color: Colors.grey.shade600),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${person.embeddings.length} faces',
-                                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Icon(Icons.photo, size: 14, color: Colors.grey.shade600),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${person.images.length} photos',
-                                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              trailing: PopupMenuButton<String>(
-                                icon: const Icon(Icons.more_vert),
-                                onSelected: (value) {
-                                  if (value == 'view') {
-                                    _showPersonDetails(person);
-                                  } else if (value == 'edit') {
-                                    _editPerson(person);
-                                  } else if (value == 'delete') {
-                                    _deletePerson(person);
-                                  }
-                                },
-                                itemBuilder: (context) => [
-                                  const PopupMenuItem(
-                                    value: 'view',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.visibility, size: 20),
-                                        SizedBox(width: 12),
-                                        Text('View Details'),
-                                      ],
-                                    ),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 'edit',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.edit, size: 20),
-                                        SizedBox(width: 12),
-                                        Text('Edit'),
-                                      ],
-                                    ),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 'delete',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.delete, size: 20, color: Colors.red),
-                                        SizedBox(width: 12),
-                                        Text('Delete', style: TextStyle(color: Colors.red)),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              onTap: () => _showPersonDetails(person),
-                            ),
-                          );
-                        },
-                      ),
+                          child: Icon(
+                            Icons.people_outline,
+                            size: 64,
+                            color: Colors.grey.shade400,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'No People in Database',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Start by adding people from face detection',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
                     ),
+                  )
+                : _filteredPeople.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(32),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.search_off,
+                                size: 64,
+                                color: Colors.grey.shade400,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            Text(
+                              'No Results Found',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Try a different search term',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _loadPeople,
+                        child: ListView.separated(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _filteredPeople.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final person = _filteredPeople[index];
+                            return Card(
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: BorderSide(color: Colors.grey.shade200),
+                              ),
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                leading: Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: person.images.isNotEmpty
+                                      ? ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: Image.memory(
+                                            person.images.first,
+                                            width: 56,
+                                            height: 56,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return Icon(
+                                                Icons.person,
+                                                size: 28,
+                                                color: Theme.of(context).colorScheme.primary,
+                                              );
+                                            },
+                                          ),
+                                        )
+                                      : Icon(
+                                          Icons.person,
+                                          size: 28,
+                                          color: Theme.of(context).colorScheme.primary,
+                                        ),
+                                ),
+                                title: Text(
+                                  person.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (person.studentId != null)
+                                      Text(
+                                        'ID: ${person.studentId}',
+                                        style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                                      ),
+                                    if (person.classification != null)
+                                      Text(
+                                        person.classification!,
+                                        style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                                      ),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.face, size: 14, color: Colors.grey.shade600),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '${person.embeddings.length} faces',
+                                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Icon(Icons.photo, size: 14, color: Colors.grey.shade600),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '${person.images.length} photos',
+                                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                trailing: PopupMenuButton<String>(
+                                  icon: const Icon(Icons.more_vert),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  onSelected: (value) {
+                                    if (value == 'view') {
+                                      _showPersonDetails(person);
+                                    } else if (value == 'edit') {
+                                      _editPerson(person);
+                                    } else if (value == 'delete') {
+                                      _deletePerson(person);
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    const PopupMenuItem(
+                                      value: 'view',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.visibility, size: 20),
+                                          SizedBox(width: 12),
+                                          Text('View Details'),
+                                        ],
+                                      ),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'edit',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.edit, size: 20),
+                                          SizedBox(width: 12),
+                                          Text('Edit'),
+                                        ],
+                                      ),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'delete',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.delete, size: 20, color: Colors.red),
+                                          SizedBox(width: 12),
+                                          Text('Delete', style: TextStyle(color: Colors.red)),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                onTap: () => _showPersonDetails(person),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+      ),
     );
   }
 }

@@ -117,102 +117,437 @@ class FoundPeoplePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Found People (' + (people.length.toString()) + ')', style: const TextStyle(fontSize: 18)),
+        title: Row(
+          children: [
+            Icon(
+              Icons.people_alt,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Found People (${people.length})',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
         actions: [
-          IconButton(
-            tooltip: 'Export to Excel',
-            icon: Text('Create Report', style: TextStyle(fontSize: 14)),
-            onPressed: () => _exportExcel(context),
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: ElevatedButton.icon(
+              onPressed: () => _exportExcel(context),
+              icon: const Icon(Icons.download, size: 18),
+              label: const Text('Export Report'),
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
           ),
-          // IconButton(
-          //   tooltip: 'View Exported Files',
-          //   icon: Icon(Icons.folder),
-          //   onPressed: () {
-          //     Navigator.of(context).push(
-          //       MaterialPageRoute(builder: (_) => const ExportedFilesPage()),
-          //     );
-          //   },
-          // ),
         ],
       ),
-      body: people.isEmpty
-          ? const Center(child: Text('No known people found'))
-          : SafeArea(
-              child: ListView.separated(
-                padding: const EdgeInsets.all(12),
-                itemCount: people.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (context, index) {
-                  final p = people[index];
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  p.name,
-                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              // Text(p.id, style: const TextStyle(color: Colors.black54)),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          if (p.studentId != null) Text('Student ID: ${p.studentId}'),
-                          // Show image thumbnails (if any) then the name
-                          if (p.images.isNotEmpty) ...[
-                            SizedBox(
-                              height: 56,
-                              child: ListView.separated(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: (p.images.length > 5) ? 5 : p.images.length,
-                                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                                itemBuilder: (context, imgIndex) {
-                                  // If this is the last visible item and there are more images,
-                                  // show a +N indicator instead of a thumbnail.
-                                  final remaining = p.images.length - 5;
-                                  if (imgIndex == 4 && p.images.length > 5) {
-                                    return CircleAvatar(
-                                      radius: 24,
-                                      backgroundColor: Colors.grey.shade300,
-                                      child: Text(
-                                        '+${remaining > 0 ? remaining : 0}',
-                                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                                      ),
-                                    );
-                                  }
-
-                                  final bytes = p.images[imgIndex];
-                                  return CircleAvatar(
-                                    radius: 24,
-                                    backgroundColor: Colors.grey.shade200,
-                                    backgroundImage: MemoryImage(bytes),
-                                  );
-                                },
-                              ),
-                            ),
-                            const SizedBox(height: 8),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Theme.of(context).colorScheme.primary.withOpacity(0.05),
+              Colors.white,
+            ],
+          ),
+        ),
+        child: people.isEmpty
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.people_outline,
+                        size: 64,
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'No People Found',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'No known people detected in the images',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : SafeArea(
+                child: Column(
+                  children: [
+                    // Summary card
+                    Container(
+                      margin: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Theme.of(context).colorScheme.primary,
+                            Theme.of(context).colorScheme.secondary,
                           ],
-
-                          // name is non-nullable on People, show directly
-                          Text('Name: ${p.name}'),
-                          if (p.email != null) Text('Email: ${p.email}'),
-                          if (p.classification != null) Text('Classification: ${p.classification}'),
-                          const SizedBox(height: 6),
-                          Text('Embeddings: ${p.embeddings.length} stored'),
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildSummaryItem(
+                            icon: Icons.person,
+                            label: 'People',
+                            value: '${people.length}',
+                          ),
+                          Container(
+                            width: 1,
+                            height: 40,
+                            color: Colors.white.withOpacity(0.3),
+                          ),
+                          _buildSummaryItem(
+                            icon: Icons.photo,
+                            label: 'Total Photos',
+                            value: '${people.fold<int>(0, (sum, p) => sum + p.images.length)}',
+                          ),
+                          Container(
+                            width: 1,
+                            height: 40,
+                            color: Colors.white.withOpacity(0.3),
+                          ),
+                          _buildSummaryItem(
+                            icon: Icons.face,
+                            label: 'Embeddings',
+                            value: '${people.fold<int>(0, (sum, p) => sum + p.embeddings.length)}',
+                          ),
                         ],
                       ),
                     ),
-                  );
-                },
+
+                    // List
+                    Expanded(
+                      child: ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        itemCount: people.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final p = people[index];
+                          return Card(
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(color: Colors.grey.shade200),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Header with name
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Icon(
+                                          Icons.person,
+                                          color: Theme.of(context).colorScheme.primary,
+                                          size: 24,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              p.name,
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            if (p.studentId != null)
+                                              Text(
+                                                'ID: ${p.studentId}',
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  color: Colors.grey.shade600,
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.shade50,
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(color: Colors.green.shade200),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.check_circle,
+                                              size: 14,
+                                              color: Colors.green.shade700,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'Identified',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.green.shade700,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 16),
+                                  const Divider(height: 1),
+                                  const SizedBox(height: 16),
+
+                                  // Image thumbnails
+                                  if (p.images.isNotEmpty) ...[
+                                    Text(
+                                      'Face Photos',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey.shade700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    SizedBox(
+                                      height: 64,
+                                      child: ListView.separated(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount: (p.images.length > 5) ? 5 : p.images.length,
+                                        separatorBuilder: (_, __) => const SizedBox(width: 10),
+                                        itemBuilder: (context, imgIndex) {
+                                          final remaining = p.images.length - 5;
+                                          if (imgIndex == 4 && p.images.length > 5) {
+                                            return Container(
+                                              width: 64,
+                                              height: 64,
+                                              decoration: BoxDecoration(
+                                                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(12),
+                                                border: Border.all(
+                                                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                                                  width: 2,
+                                                ),
+                                              ),
+                                              child: Center(
+                                                child: Text(
+                                                  '+${remaining > 0 ? remaining : 0}',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Theme.of(context).colorScheme.primary,
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          }
+
+                                          final bytes = p.images[imgIndex];
+                                          return Container(
+                                            width: 64,
+                                            height: 64,
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(12),
+                                              border: Border.all(color: Colors.grey.shade300, width: 2),
+                                              image: DecorationImage(
+                                                image: MemoryImage(bytes),
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                  ],
+
+                                  // Details
+                                  if (p.email != null || p.classification != null) ...[
+                                    const Divider(height: 1),
+                                    const SizedBox(height: 12),
+                                  ],
+
+                                  if (p.email != null)
+                                    _buildInfoRow(
+                                      icon: Icons.email_outlined,
+                                      label: 'Email',
+                                      value: p.email!,
+                                      context: context,
+                                    ),
+
+                                  if (p.classification != null)
+                                    _buildInfoRow(
+                                      icon: Icons.school_outlined,
+                                      label: 'Classification',
+                                      value: p.classification!,
+                                      context: context,
+                                    ),
+
+                                  // Stats
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      _buildStatChip(
+                                        icon: Icons.face,
+                                        label: '${p.embeddings.length} embeddings',
+                                        context: context,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      _buildStatChip(
+                                        icon: Icons.photo_library,
+                                        label: '${p.images.length} photos',
+                                        context: context,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryItem({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.white, size: 28),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.9),
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required BuildContext context,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: Colors.grey.shade600),
+          const SizedBox(width: 8),
+          Text(
+            '$label: ',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatChip({
+    required IconData icon,
+    required String label,
+    required BuildContext context,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: Colors.grey.shade700),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade700,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

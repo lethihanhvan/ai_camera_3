@@ -683,94 +683,150 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
   @override
   Widget build(BuildContext context) {
     final displayWidth = MediaQuery.of(context).size.width;
-    return Column(
-      children: [
-        SizedBox(
-          width: displayWidth,
-          child: AspectRatio(
-            aspectRatio: widget.imageWidth / widget.imageHeight,
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey, width: 2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              clipBehavior: Clip.hardEdge,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: ClipRect(
-                  child: InteractiveViewer(
-                    key: _interactiveViewerKey,
-                    transformationController: _transformationController,
-                    panEnabled: true,
-                    scaleEnabled: true,
-                    boundaryMargin: const EdgeInsets.all(100),
-                    minScale: 1.0,
-                    maxScale: 10.0,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.translucent,
-                      onTapDown: _handleTapDown,
-                      onLongPress: () async {
-                        await _confirmAndDeleteImage();
-                      },
-                      onDoubleTapDown: (details) => _doubleTapDetails = details,
-                      onDoubleTap: _handleDoubleTap,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Image.file(
-                            File(widget.imagePath),
-                            fit: BoxFit.contain,
-                            width: double.infinity,
-                            height: double.infinity,
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with face count and delete button
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.face,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${widget.facePeoples.length} face${widget.facePeoples.length != 1 ? 's' : ''} detected',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
-                          // Delete button overlay (top-right)
-                          // Positioned(
-                          //   top: 8,
-                          //   right: 8,
-                          //   child: Material(
-                          //     color: Colors.black45,
-                          //     shape: const CircleBorder(),
-                          //     clipBehavior: Clip.antiAlias,
-                          //     child: IconButton(
-                          //       icon: const Icon(Icons.delete, size: 20, color: Colors.white),
-                          //       tooltip: 'Delete image',
-                          //       onPressed: () async {
-                          //         await _confirmAndDeleteImage();
-                          //       },
-                          //     ),
-                          //   ),
-                          // ),
-                           if (widget.facePeoples.isNotEmpty)
-                             Positioned.fill(
-                               child: CustomPaint(
-                                 painter: _FacePainter(
-                                   widget.facePeoples,
-                                   imageSize: Size(widget.imageWidth.toDouble(), widget.imageHeight.toDouble()),
-                                   selectedIndex: _selectedFaceIndex,
-                                   debugTapPoint: _debugLastImagePoint,
-                                   rectsAreNormalized: widget.rectsAreNormalized,
-                                 ),
-                               ),
-                             ),
-                        ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  if (widget.onDelete != null)
+                    IconButton(
+                      icon: Icon(Icons.delete_outline, size: 20, color: Colors.red.shade400),
+                      tooltip: 'Long press image to delete',
+                      onPressed: null,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                ],
+              ),
+            ),
+
+            // Image viewer
+            SizedBox(
+              width: displayWidth,
+              child: AspectRatio(
+                aspectRatio: widget.imageWidth / widget.imageHeight,
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300, width: 2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  clipBehavior: Clip.hardEdge,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: ClipRect(
+                      child: InteractiveViewer(
+                        key: _interactiveViewerKey,
+                        transformationController: _transformationController,
+                        panEnabled: true,
+                        scaleEnabled: true,
+                        boundaryMargin: const EdgeInsets.all(100),
+                        minScale: 1.0,
+                        maxScale: 10.0,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onTapDown: _handleTapDown,
+                          onLongPress: () async {
+                            await _confirmAndDeleteImage();
+                          },
+                          onDoubleTapDown: (details) => _doubleTapDetails = details,
+                          onDoubleTap: _handleDoubleTap,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Image.file(
+                                File(widget.imagePath),
+                                fit: BoxFit.contain,
+                                width: double.infinity,
+                                height: double.infinity,
+                              ),
+                              if (widget.facePeoples.isNotEmpty)
+                                Positioned.fill(
+                                  child: CustomPaint(
+                                    painter: _FacePainter(
+                                      widget.facePeoples,
+                                      imageSize: Size(widget.imageWidth.toDouble(), widget.imageHeight.toDouble()),
+                                      selectedIndex: _selectedFaceIndex,
+                                      debugTapPoint: _debugLastImagePoint,
+                                      rectsAreNormalized: widget.rectsAreNormalized,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
+
+            // Instructions
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.blue.shade100),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: Colors.blue.shade700),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Tap face to add info • Double tap to zoom • Long press to delete',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue.shade900,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        // const SizedBox(height: 8),
-        // // Text('People Detected: ${widget.facePeoples.length}'),
-        // // const SizedBox(height: 16),
-        // TextButton(
-        //   onPressed: () async {
-        //     await showPeopleInformationDialog();
-        //   },
-        //   child: const Text('Add People'),
-        // ),
-      ],
+      ),
     );
   }
 }
