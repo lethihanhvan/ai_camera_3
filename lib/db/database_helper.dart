@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -93,9 +95,46 @@ class DatabaseHelper {
   // Update an existing People
   Future<int> updatePeople(People people) async {
     final db = await database;
+
+    // Clean up images and embeddings list - remove duplicates
+    final uniqueEmbeddings = <List<double>>[];
+    final seenEmbeddings = <String>{};
+
+    for (final embedding in people.embeddings) {
+      // Create a string representation of the embedding for comparison
+      final embeddingKey = embedding.join(',');
+      if (!seenEmbeddings.contains(embeddingKey)) {
+        seenEmbeddings.add(embeddingKey);
+        uniqueEmbeddings.add(embedding);
+      }
+    }
+
+    final uniqueImages = <Uint8List>[];
+    final seenImages = <String>{};
+
+    for (final image in people.images) {
+      // Use base64 encoding for comparison to avoid memory issues with large byte arrays
+      final imageKey = base64Encode(image);
+      if (!seenImages.contains(imageKey)) {
+        seenImages.add(imageKey);
+        uniqueImages.add(image);
+      }
+    }
+
+    // Create cleaned People object
+    final cleanedPeople = People(
+      id: people.id,
+      name: people.name,
+      studentId: people.studentId,
+      email: people.email,
+      classification: people.classification,
+      embeddings: uniqueEmbeddings,
+      images: uniqueImages,
+    );
+
     return await db.update(
       'people',
-      people.toMap(),
+      cleanedPeople.toMap(),
       where: 'id = ?',
       whereArgs: [people.id],
     );
