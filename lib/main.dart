@@ -34,7 +34,17 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'AI Face Recognition',
+      title: 'Nhận dạng điểm danh AI',
+      // localizationsDelegates: const [
+      //   GlobalMaterialLocalizations.delegate,
+      //   GlobalWidgetsLocalizations.delegate,
+      //   GlobalCupertinoLocalizations.delegate,
+      // ],
+      // supportedLocales: const [
+      //   Locale('en', ''), // English, no country code
+      //   Locale('vi', ''), // Vietnamese, no country code
+      // ],
+      // locale: const Locale('vi', ''),
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
@@ -447,7 +457,7 @@ class _HomePageState extends State<HomePage> {
                       const CircularProgressIndicator(),
                       const SizedBox(height: 24),
                       Text(
-                        'Initializing AI Model',
+                        'Đang khởi tạo mô hình AI',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -456,7 +466,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Please wait...',
+                        'Vui lòng đợi...',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade600,
@@ -480,8 +490,8 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(width: 12),
             const Text(
-              'AI Face Recognition',
-              style: TextStyle(fontWeight: FontWeight.w600),
+              'Nhận dạng điểm danh AI',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
             ),
           ],
         ),
@@ -498,14 +508,14 @@ class _HomePageState extends State<HomePage> {
                 color: Theme.of(context).colorScheme.primary,
               ),
             ),
-            tooltip: 'Settings',
+            tooltip: 'Cài đặt',
             onPressed: () {
               showModalBottomSheet(
                 context: context,
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                 ),
-                builder: (context) => Container(
+                builder: (context) => SafeArea(child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 20),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -526,7 +536,7 @@ class _HomePageState extends State<HomePage> {
                             Icon(Icons.settings, color: Theme.of(context).colorScheme.primary),
                             const SizedBox(width: 12),
                             const Text(
-                              'Settings',
+                              'Cài đặt',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -539,8 +549,8 @@ class _HomePageState extends State<HomePage> {
                       const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.people),
-                        title: const Text('Manage People'),
-                        subtitle: const Text('View, edit, and delete people'),
+                        title: const Text('Quản lý người'),
+                        subtitle: const Text('Xem, sửa và xóa người'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
                           Navigator.pop(context);
@@ -551,8 +561,8 @@ class _HomePageState extends State<HomePage> {
                       ),
                       ListTile(
                         leading: const Icon(Icons.import_export),
-                        title: const Text('Import/Export Data'),
-                        subtitle: const Text('Backup and restore database'),
+                        title: const Text('Nhập/Xuất dữ liệu'),
+                        subtitle: const Text('Sao lưu và khôi phục cơ sở dữ liệu'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
                           Navigator.pop(context);
@@ -563,8 +573,8 @@ class _HomePageState extends State<HomePage> {
                       ),
                       ListTile(
                         leading: const Icon(Icons.folder_outlined),
-                        title: const Text('Report Files'),
-                        subtitle: const Text('View exported reports'),
+                        title: const Text('Tệp báo cáo'),
+                        subtitle: const Text('Xem các báo cáo đã xuất'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
                           Navigator.pop(context);
@@ -575,7 +585,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ),
-                ),
+                )),
               );
             },
           ),
@@ -622,7 +632,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       _buildStatItem(
                         icon: Icons.photo_library,
-                        label: 'Images',
+                        label: 'Ảnh',
                         value: '${_faceImages.length}',
                       ),
                       Container(
@@ -632,7 +642,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       _buildStatItem(
                         icon: Icons.face,
-                        label: 'Faces',
+                        label: 'Khuôn mặt',
                         value: '${_faceImages.fold<int>(0, (sum, img) => sum + img.facePeoples.length)}',
                       ),
                       Container(
@@ -642,7 +652,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       _buildStatItem(
                         icon: Icons.person,
-                        label: 'People',
+                        label: 'Người',
                         value: '${_dbPeoples.length}',
                       ),
                     ],
@@ -670,7 +680,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                             const SizedBox(height: 24),
                             Text(
-                              'No Images Selected',
+                              'Không có ảnh nào được chọn',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w600,
@@ -679,7 +689,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Tap "Pick Images" to get started',
+                              'Nhấn "Chọn ảnh" để bắt đầu',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey.shade500,
@@ -714,7 +724,7 @@ class _HomePageState extends State<HomePage> {
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: const Text('Image removed'),
+                                      content: const Text('Đã xóa ảnh'),
                                       behavior: SnackBarBehavior.floating,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),
@@ -754,9 +764,9 @@ class _HomePageState extends State<HomePage> {
                           onPressed: _openImagePickers,
                           icon: const Icon(Icons.add_photo_alternate),
                           label: const Text(
-                            'Pick Images',
+                            'Chọn ảnh',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -787,7 +797,7 @@ class _HomePageState extends State<HomePage> {
                             },
                             icon: const Icon(Icons.people_alt),
                             label: const Text(
-                              'Show Found People',
+                              'Hiển thị người đã tìm thấy',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,

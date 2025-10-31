@@ -34,7 +34,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading people: $e')),
+          SnackBar(content: Text('Lỗi khi tải người: $e')),
         );
       }
     }
@@ -44,12 +44,12 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Person'),
-        content: Text('Are you sure you want to delete ${person.name}?\n\nThis will remove all their face data and cannot be undone.'),
+        title: const Text('Xóa người'),
+        content: Text('Bạn có chắc chắn muốn xóa ${person.name}?\n\nThao tác này sẽ xóa tất cả dữ liệu khuôn mặt của họ và không thể hoàn tác.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('Hủy'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -57,7 +57,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Delete'),
+            child: const Text('Xóa'),
           ),
         ],
       ),
@@ -69,13 +69,13 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
         await _loadPeople();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${person.name} deleted successfully')),
+            SnackBar(content: Text('${person.name} đã được xóa thành công')),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error deleting person: $e')),
+            SnackBar(content: Text('Lỗi khi xóa người: $e')),
           );
         }
       }
@@ -91,7 +91,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Edit Person'),
+        title: const Text('Chỉnh sửa người'),
         content: SingleChildScrollView(
           child: SizedBox(
             width: MediaQuery.of(context).size.width * 0.9,
@@ -101,7 +101,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
                 TextField(
                   controller: nameController,
                   decoration: const InputDecoration(
-                    labelText: 'Name *',
+                    labelText: 'Tên *',
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -109,7 +109,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
                 TextField(
                   controller: studentIdController,
                   decoration: const InputDecoration(
-                    labelText: 'Student ID',
+                    labelText: 'Mã sinh viên',
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -126,7 +126,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
                 TextField(
                   controller: classificationController,
                   decoration: const InputDecoration(
-                    labelText: 'Classification',
+                    labelText: 'Phân loại',
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -137,19 +137,19 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('Hủy'),
           ),
           ElevatedButton(
             onPressed: () {
               if (nameController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Name is required')),
+                  const SnackBar(content: Text('Tên là bắt buộc')),
                 );
                 return;
               }
               Navigator.pop(context, true);
             },
-            child: const Text('Save'),
+            child: const Text('Lưu'),
           ),
         ],
       ),
@@ -171,13 +171,13 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
         await _loadPeople();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${updatedPerson.name} updated successfully')),
+            SnackBar(content: Text('${updatedPerson.name} cập nhật thành công')),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error updating person: $e')),
+            SnackBar(content: Text('Lỗi cập nhật người: $e')),
           );
         }
       }
@@ -232,9 +232,9 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
                     children: [
                       // Basic Info
                       _buildInfoRow('ID', person.id),
-                      if (person.studentId != null) _buildInfoRow('Student ID', person.studentId!),
+                      if (person.studentId != null) _buildInfoRow('Mã sinh viên', person.studentId!),
                       if (person.email != null) _buildInfoRow('Email', person.email!),
-                      if (person.classification != null) _buildInfoRow('Classification', person.classification!),
+                      if (person.classification != null) _buildInfoRow('Phân loại', person.classification!),
 
                       const SizedBox(height: 16),
                       const Divider(),
@@ -242,7 +242,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
 
                       // Statistics
                       Text(
-                        'Face Data',
+                        'Dữ liệu khuôn mặt',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -250,8 +250,8 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      _buildInfoRow('Embeddings', '${person.embeddings.length} faces trained'),
-                      _buildInfoRow('Images', '${person.images.length} photos stored'),
+                      _buildInfoRow('Dữ liệu nhúng', '${person.embeddings.length} khuôn mặt đã được huấn luyện'),
+                      _buildInfoRow('Ảnh', '${person.images.length} ảnh đã lưu'),
 
                       const SizedBox(height: 16),
                       const Divider(),
@@ -260,7 +260,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
                       // Images Gallery
                       if (person.images.isNotEmpty) ...[
                         Text(
-                          'Face Photos',
+                          'Ảnh khuôn mặt',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -359,7 +359,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
             ),
             const SizedBox(width: 12),
             const Text(
-              'Manage People',
+              'Quản lý người',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
           ],
@@ -370,7 +370,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Search people...',
+                hintText: 'Tìm kiếm người...',
                 prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.primary),
                 filled: true,
                 fillColor: Colors.white,
@@ -427,7 +427,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          'No People in Database',
+                          'Không có ai trong cơ sở dữ liệu',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w600,
@@ -436,7 +436,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Start by adding people from face detection',
+                          'Bắt đầu bằng cách thêm người từ nhận dạng khuôn mặt',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey.shade500,
@@ -464,7 +464,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
                             ),
                             const SizedBox(height: 24),
                             Text(
-                              'No Results Found',
+                              'Không tìm thấy kết quả',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w600,
@@ -473,7 +473,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Try a different search term',
+                              'Thử một cụm từ tìm kiếm khác',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey.shade500,
@@ -554,14 +554,14 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
                                         Icon(Icons.face, size: 14, color: Colors.grey.shade600),
                                         const SizedBox(width: 4),
                                         Text(
-                                          '${person.embeddings.length} faces',
+                                          '${person.embeddings.length} khuôn mặt',
                                           style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                                         ),
                                         const SizedBox(width: 12),
                                         Icon(Icons.photo, size: 14, color: Colors.grey.shade600),
                                         const SizedBox(width: 4),
                                         Text(
-                                          '${person.images.length} photos',
+                                          '${person.images.length} ảnh',
                                           style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                                         ),
                                       ],
@@ -589,7 +589,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
                                         children: [
                                           Icon(Icons.visibility, size: 20),
                                           SizedBox(width: 12),
-                                          Text('View Details'),
+                                          Text('Xem chi tiết'),
                                         ],
                                       ),
                                     ),
@@ -599,7 +599,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
                                         children: [
                                           Icon(Icons.edit, size: 20),
                                           SizedBox(width: 12),
-                                          Text('Edit'),
+                                          Text('Chỉnh sửa'),
                                         ],
                                       ),
                                     ),
@@ -609,7 +609,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
                                         children: [
                                           Icon(Icons.delete, size: 20, color: Colors.red),
                                           SizedBox(width: 12),
-                                          Text('Delete', style: TextStyle(color: Colors.red)),
+                                          Text('Xóa', style: TextStyle(color: Colors.red)),
                                         ],
                                       ),
                                     ),

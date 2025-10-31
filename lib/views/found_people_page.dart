@@ -125,7 +125,7 @@ class FoundPeoplePage extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Text(
-              'Found People (${people.length})',
+              'Người đã tìm thấy (${people.length})',
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ],
@@ -136,7 +136,7 @@ class FoundPeoplePage extends StatelessWidget {
             child: ElevatedButton.icon(
               onPressed: () => _exportExcel(context),
               icon: const Icon(Icons.download, size: 18),
-              label: const Text('Export Report'),
+              label: const Text('Xuất báo cáo'),
               style: ElevatedButton.styleFrom(
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -178,7 +178,7 @@ class FoundPeoplePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      'No People Found',
+                      'Không tìm thấy người',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
@@ -187,7 +187,7 @@ class FoundPeoplePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'No known people detected in the images',
+                      'Không có người quen nào được phát hiện trong ảnh',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade500,
@@ -224,7 +224,7 @@ class FoundPeoplePage extends StatelessWidget {
                         children: [
                           _buildSummaryItem(
                             icon: Icons.person,
-                            label: 'People',
+                            label: 'Người',
                             value: '${people.length}',
                           ),
                           Container(
@@ -234,7 +234,7 @@ class FoundPeoplePage extends StatelessWidget {
                           ),
                           _buildSummaryItem(
                             icon: Icons.photo,
-                            label: 'Total Photos',
+                            label: 'Tổng ảnh',
                             value: '${people.fold<int>(0, (sum, p) => sum + p.images.length)}',
                           ),
                           Container(
@@ -244,7 +244,7 @@ class FoundPeoplePage extends StatelessWidget {
                           ),
                           _buildSummaryItem(
                             icon: Icons.face,
-                            label: 'Embeddings',
+                            label: 'Dữ liệu nhúng',
                             value: '${people.fold<int>(0, (sum, p) => sum + p.embeddings.length)}',
                           ),
                         ],
@@ -325,7 +325,7 @@ class FoundPeoplePage extends StatelessWidget {
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
-                                              'Identified',
+                                              'Đã nhận diện',
                                               style: TextStyle(
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w600,
@@ -345,7 +345,7 @@ class FoundPeoplePage extends StatelessWidget {
                                   // Image thumbnails
                                   if (p.images.isNotEmpty) ...[
                                     Text(
-                                      'Face Photos',
+                                      'Ảnh khuôn mặt',
                                       style: TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,

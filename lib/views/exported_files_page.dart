@@ -94,11 +94,11 @@ class _ExportedFilesPageState extends State<ExportedFilesPage> {
   }
 
   String _formatRange() {
-    if (_filterStart == null && _filterEnd == null) return 'All dates';
+    if (_filterStart == null && _filterEnd == null) return 'Tất cả các ngày';
     final startText = _filterStart != null ? '${_filterStart!.year}-${_filterStart!.month.toString().padLeft(2, '0')}-${_filterStart!.day.toString().padLeft(2, '0')}' : '';
     final endText = _filterEnd != null ? '${_filterEnd!.year}-${_filterEnd!.month.toString().padLeft(2, '0')}-${_filterEnd!.day.toString().padLeft(2, '0')}' : '';
     if (_filterStart != null && _filterEnd != null) return '$startText → $endText';
-    return _filterStart != null ? 'From $startText' : 'Until $endText';
+    return _filterStart != null ? 'Từ $startText' : 'Đến $endText';
   }
 
   @override
@@ -113,7 +113,7 @@ class _ExportedFilesPageState extends State<ExportedFilesPage> {
             ),
             const SizedBox(width: 12),
             const Text(
-              'Report Files',
+              'Tệp báo cáo',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
           ],
@@ -123,7 +123,7 @@ class _ExportedFilesPageState extends State<ExportedFilesPage> {
             Container(
               margin: const EdgeInsets.only(right: 8),
               child: IconButton(
-                tooltip: 'Clear filter',
+                tooltip: 'Xóa bộ lọc',
                 icon: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -172,7 +172,7 @@ class _ExportedFilesPageState extends State<ExportedFilesPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Date Filter',
+                          'Bộ lọc ngày',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -193,7 +193,7 @@ class _ExportedFilesPageState extends State<ExportedFilesPage> {
                   ElevatedButton.icon(
                     onPressed: _pickDateRange,
                     icon: const Icon(Icons.filter_list, size: 18),
-                    label: const Text('Filter'),
+                    label: const Text('Lọc'),
                     style: ElevatedButton.styleFrom(
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -226,7 +226,7 @@ class _ExportedFilesPageState extends State<ExportedFilesPage> {
                               ),
                               const SizedBox(height: 24),
                               Text(
-                                'No Report Files',
+                                'Không có tệp báo cáo',
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w600,
@@ -236,8 +236,8 @@ class _ExportedFilesPageState extends State<ExportedFilesPage> {
                               const SizedBox(height: 8),
                               Text(
                                 _filterStart != null || _filterEnd != null
-                                    ? 'No files in selected date range'
-                                    : 'Export a report to see files here',
+                                    ? 'Không có tệp nào trong phạm vi ngày đã chọn'
+                                    : 'Xuất báo cáo để xem tệp tại đây',
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey.shade500,

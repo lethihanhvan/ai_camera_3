@@ -53,7 +53,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
             ),
             const SizedBox(width: 12),
             const Text(
-              'Import/Export Data',
+              'Nhập/Xuất dữ liệu',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
           ],
@@ -107,7 +107,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
-                                  'Manage Database',
+                                  'Quản lý cơ sở dữ liệu',
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
@@ -115,7 +115,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Backup and restore your data',
+                                  'Sao lưu và khôi phục dữ liệu của bạn',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Colors.grey.shade600,
@@ -130,7 +130,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                       const Divider(height: 1),
                       const SizedBox(height: 16),
                       Text(
-                        'Export all people data to JSON or import from a backup file. When importing, existing records will be merged based on ID.',
+                        'Xuất tất cả dữ liệu người sang JSON hoặc nhập từ tệp sao lưu. Khi nhập, các bản ghi hiện có sẽ được hợp nhất dựa trên ID.',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade700,
@@ -190,7 +190,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   const Text(
-                                    'Export to JSON',
+                                    'Xuất sang JSON',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 18,
@@ -199,7 +199,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Create a backup file',
+                                    'Tạo một tệp sao lưu',
                                     style: TextStyle(
                                       color: Colors.white.withOpacity(0.9),
                                       fontSize: 14,
@@ -258,7 +258,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    'Import from JSON',
+                                    'Nhập từ JSON',
                                     style: TextStyle(
                                       color: Theme.of(context).colorScheme.primary,
                                       fontSize: 18,
@@ -267,7 +267,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Restore from backup',
+                                    'Khôi phục từ bản sao lưu',
                                     style: TextStyle(
                                       color: Colors.grey.shade600,
                                       fontSize: 14,
@@ -354,7 +354,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                'Storage permission required',
+                                'Yêu cầu quyền truy cập bộ nhớ',
                                 style: TextStyle(
                                   color: Colors.orange.shade900,
                                   fontWeight: FontWeight.bold,
@@ -366,7 +366,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'To export files, this app needs storage access permission.',
+                          'Để xuất tệp, ứng dụng này cần quyền truy cập bộ nhớ.',
                           style: TextStyle(
                             color: Colors.orange.shade900,
                             fontSize: 14,
@@ -382,7 +382,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                               await _checkPermissions();
                             },
                             icon: const Icon(Icons.settings, size: 18),
-                            label: const Text('Open Settings'),
+                            label: const Text('Mở cài đặt'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: Colors.orange.shade700,
                               side: BorderSide(color: Colors.orange.shade700, width: 2),
@@ -423,7 +423,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
 
       if (!status.isGranted && !status.isLimited) {
         setState(() {
-          _statusMessage = 'Storage permission denied. Please grant storage permission in app settings.';
+          _statusMessage = 'Quyền truy cập bộ nhớ bị từ chối. Vui lòng cấp quyền truy cập bộ nhớ trong cài đặt ứng dụng.';
           _isLoading = false;
         });
         return;
@@ -434,7 +434,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
       
       if (people.isEmpty) {
         setState(() {
-          _statusMessage = 'No people data to export';
+          _statusMessage = 'Không có dữ liệu người để xuất';
           _isLoading = false;
         });
         return;
@@ -468,14 +468,14 @@ class _ImportExportPageState extends State<ImportExportPage> {
       await file.writeAsString(jsonString);
 
       setState(() {
-        _statusMessage = 'Successfully exported ${people.length} people to:\n${file.path}';
+        _statusMessage = 'Đã xuất thành công ${people.length} người vào:\n${file.path}';
         _isLoading = false;
       });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Exported to: ${file.path}'),
+            content: Text('Đã xuất vào: ${file.path}'),
             duration: const Duration(seconds: 5),
             action: SnackBarAction(
               label: 'OK',
@@ -486,7 +486,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
       }
     } catch (e) {
       setState(() {
-        _statusMessage = 'Export failed: $e';
+        _statusMessage = 'Xuất thất bại: $e';
         _isLoading = false;
       });
     }
@@ -499,106 +499,80 @@ class _ImportExportPageState extends State<ImportExportPage> {
     });
 
     try {
-      // Pick JSON file
+      // Pick a JSON file
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['json'],
       );
 
-      if (result == null || result.files.isEmpty) {
+      if (result == null || result.files.single.path == null) {
         setState(() {
-          _statusMessage = 'No file selected';
+          _statusMessage = 'Không có tệp nào được chọn';
           _isLoading = false;
         });
         return;
       }
 
-      final filePath = result.files.single.path;
-      if (filePath == null) {
-        setState(() {
-          _statusMessage = 'Invalid file path';
-          _isLoading = false;
-        });
-        return;
-      }
-
-      // Read and parse JSON
-      final file = File(filePath);
+      final file = File(result.files.single.path!);
       final jsonString = await file.readAsString();
-      final jsonData = jsonDecode(jsonString) as Map<String, dynamic>;
+      final jsonData = json.decode(jsonString);
 
-      final peopleList = (jsonData['people'] as List<dynamic>)
-          .map((e) => People.fromJson(e as Map<String, dynamic>))
-          .toList();
-
-      if (peopleList.isEmpty) {
+      if (jsonData['people'] == null) {
         setState(() {
-          _statusMessage = 'No people data found in file';
+          _statusMessage = 'Tệp JSON không hợp lệ: Thiếu khóa "people"';
           _isLoading = false;
         });
         return;
       }
 
-      // Import with migration logic
-      int newCount = 0;
+      final List<dynamic> peopleData = jsonData['people'];
+      final List<People> peopleToImport = peopleData.map((p) => People.fromJson(p)).toList();
+
+      int createdCount = 0;
       int updatedCount = 0;
 
-      for (final person in peopleList) {
+      for (final person in peopleToImport) {
         final existing = await _dbHelper.getPeopleById(person.id);
-        
         if (existing != null) {
-          // Merge: combine embeddings and images
-          final mergedEmbeddings = <List<double>>[
-            ...existing.embeddings,
-            ...person.embeddings,
-          ];
-          
-          final mergedImages = <Uint8List>[
-            ...existing.images,
-            ...person.images,
-          ];
-
-          final merged = People(
-            id: person.id,
+          // Merge data: Keep existing ID, update other fields
+          final updatedPerson = People(
+            id: existing.id,
             name: person.name,
-            classification: person.classification,
             studentId: person.studentId,
             email: person.email,
-            embeddings: mergedEmbeddings,
-            images: mergedImages,
+            classification: person.classification,
+            // Merge embeddings and images, avoiding duplicates
+            embeddings: [...existing.embeddings, ...person.embeddings]
+                .map((e) => jsonEncode(e))
+                .toSet()
+                .map((e) => (jsonDecode(e) as List).cast<double>())
+                .toList(),
+            images: [...existing.images, ...person.images]
+                .map((img) => base64Encode(img))
+                .toSet()
+                .map((s) => base64Decode(s))
+                .toList(),
           );
-
-          await _dbHelper.updatePeople(merged);
+          await _dbHelper.updatePeople(updatedPerson);
           updatedCount++;
         } else {
-          // Insert new person
+          // Create new person
           await _dbHelper.insertPeople(person);
-          newCount++;
+          createdCount++;
         }
       }
 
       setState(() {
-        _statusMessage = 'Import completed!\n'
-            'New people: $newCount\n'
-            'Updated people: $updatedCount\n'
-            'Total processed: ${peopleList.length}';
+        _statusMessage = 'Nhập thành công!\n'
+            'Đã tạo: $createdCount người mới\n'
+            'Đã cập nhật: $updatedCount người hiện có';
         _isLoading = false;
       });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Imported $newCount new, updated $updatedCount existing'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
     } catch (e) {
       setState(() {
-        _statusMessage = 'Import failed: $e';
+        _statusMessage = 'Nhập thất bại: $e';
         _isLoading = false;
       });
     }
   }
 }
-
