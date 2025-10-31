@@ -34,7 +34,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi khi tải người: $e')),
+          SnackBar(content: Text('Lỗi khi tải học sinh: $e')),
         );
       }
     }
@@ -44,7 +44,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Xóa người'),
+        title: const Text('Xóa học sinh'),
         content: Text('Bạn có chắc chắn muốn xóa ${person.name}?\n\nThao tác này sẽ xóa tất cả dữ liệu khuôn mặt của họ và không thể hoàn tác.'),
         actions: [
           TextButton(
@@ -75,7 +75,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Lỗi khi xóa người: $e')),
+            SnackBar(content: Text('Lỗi khi xóa học sinh: $e')),
           );
         }
       }
@@ -91,7 +91,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Chỉnh sửa người'),
+        title: const Text('Chỉnh sửa học sinh'),
         content: SingleChildScrollView(
           child: SizedBox(
             width: MediaQuery.of(context).size.width * 0.9,
@@ -177,7 +177,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Lỗi cập nhật người: $e')),
+            SnackBar(content: Text('Lỗi cập nhật học sinh: $e')),
           );
         }
       }
@@ -359,7 +359,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
             ),
             const SizedBox(width: 12),
             const Text(
-              'Quản lý người',
+              'Quản lý học sinh',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
           ],
@@ -370,7 +370,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Tìm kiếm người...',
+                hintText: 'Tìm kiếm học sinh...',
                 prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.primary),
                 filled: true,
                 fillColor: Colors.white,
@@ -436,7 +436,7 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Bắt đầu bằng cách thêm người từ nhận dạng khuôn mặt',
+                          'Bắt đầu bằng cách thêm học sinh từ nhận dạng khuôn mặt',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey.shade500,
@@ -499,8 +499,8 @@ class _ManagePeoplePageState extends State<ManagePeoplePage> {
                               child: ListTile(
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                 leading: Container(
-                                  width: 56,
-                                  height: 56,
+                                  width: 40,
+                                  height: 40,
                                   decoration: BoxDecoration(
                                     color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(12),

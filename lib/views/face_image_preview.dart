@@ -75,14 +75,14 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
   }
 
   Future<void> _addPeopleInformation(
-    String? uuidInput,
-    String name,
-    String studentId,
-    String? email,
-    String classification,
-    List<double>? embedding,
-    Uint8List? image,
-  ) async {
+      String? uuidInput,
+      String name,
+      String studentId,
+      String? email,
+      String classification,
+      List<double>? embedding,
+      Uint8List? image,
+      ) async {
     if (uuidInput == null || uuidInput.isEmpty) {
       // add new person
       // create an example People
@@ -101,7 +101,7 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
       widget.onAddPeopleCallback();
       // show a simple confirmation
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Đã lưu ${people.name} thành công!')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saved ${people.name} successfully!')));
       }
     } else {
       // update existing person
@@ -135,7 +135,7 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('Đã cập nhật ${updatedPeople.name} thành công!')));
+          ).showSnackBar(SnackBar(content: Text('Updated ${updatedPeople.name} successfully!')));
         }
       }
     }
@@ -175,7 +175,7 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
     // `rectsAreNormalized`). This avoids mixing viewport and scene spaces.
     final RenderBox ivBox =
         _interactiveViewerKey.currentContext?.findRenderObject() as RenderBox? ??
-        context.findRenderObject() as RenderBox;
+            context.findRenderObject() as RenderBox;
     final Offset viewportPoint = ivBox.globalToLocal(details.globalPosition);
     final Offset scenePoint = _transformationController.toScene(viewportPoint);
 
@@ -202,11 +202,11 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
       final r0 = widget.facePeoples[i].faceRect;
       final Rect rImage = normalizedRects
           ? Rect.fromLTRB(
-              r0.left * imageSize.width,
-              r0.top * imageSize.height,
-              r0.right * imageSize.width,
-              r0.bottom * imageSize.height,
-            )
+        r0.left * imageSize.width,
+        r0.top * imageSize.height,
+        r0.right * imageSize.width,
+        r0.bottom * imageSize.height,
+      )
           : r0;
       if (rImage.inflate(hitInflateImage).contains(imagePoint)) {
         hitIndex = i;
@@ -222,11 +222,11 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
         final r0 = widget.facePeoples[i].faceRect;
         final Rect rImage = normalizedRects
             ? Rect.fromLTRB(
-                r0.left * imageSize.width,
-                r0.top * imageSize.height,
-                r0.right * imageSize.width,
-                r0.bottom * imageSize.height,
-              )
+          r0.left * imageSize.width,
+          r0.top * imageSize.height,
+          r0.right * imageSize.width,
+          r0.bottom * imageSize.height,
+        )
             : r0;
         debugPrint(' rect[$i]=imageRect=$rImage');
       }
@@ -266,7 +266,7 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
     if (uuidController.text.isNotEmpty) {
       // existing person; find from allPeople list to ensure same instance
       selectedPerson = allPeople.firstWhere(
-        (p) => p.id == uuidController.text,
+            (p) => p.id == uuidController.text,
         orElse: () => allPeople.isEmpty ? People(id: '', name: '', classification: '') : allPeople.first,
       );
 
@@ -373,7 +373,7 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
                 title: Column(
                   children: [
                     if (facePreview != null) ...[facePreview, const SizedBox(height: 12)],
-                    const Text('Lưu thông tin người', style: TextStyle(fontSize: 16)),
+                    const Text('Lưu thông tin nhận dạng', style: TextStyle(fontSize: 16)),
                   ],
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -387,7 +387,7 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
                         segments: const [
                           ButtonSegment(
                             value: true,
-                            label: Text('Chọn người có sẵn', style: TextStyle(fontSize: 14)),
+                            label: Text('Chọn học sinh có sẵn', style: TextStyle(fontSize: 14)),
                             icon: Icon(Icons.person_search, size: 18),
                           ),
                           ButtonSegment(
@@ -419,7 +419,7 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
                         DropdownButtonFormField<People>(
                           initialValue: selectedPerson,
                           decoration: InputDecoration(
-                            labelText: 'Chọn người',
+                            labelText: 'Chọn học sinh',
                             labelStyle: const TextStyle(fontSize: 14),
                             prefixIcon: const Icon(Icons.people, size: 20),
                             isDense: true,
@@ -499,9 +499,9 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
                       const SizedBox(height: 12),
                       _buildTextFieldWithLabel(
                         controller: studentIdController,
-                        label: 'Mã sinh viên',
+                        label: 'Mã học sinh',
                         icon: Icons.badge,
-                        hint: 'Nhập mã sinh viên',
+                        hint: 'e.g., S12345',
                         readOnly: isSelectMode && selectedPerson != null,
                       ),
                       const SizedBox(height: 12),
@@ -509,53 +509,50 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
                         controller: emailController,
                         label: 'Email',
                         icon: Icons.email,
-                        hint: 'Nhập email',
+                        hint: 'user@example.com',
+                        keyboardType: TextInputType.emailAddress,
                         readOnly: isSelectMode && selectedPerson != null,
                       ),
                       const SizedBox(height: 12),
                       _buildTextFieldWithLabel(
                         controller: classificationController,
-                        label: 'Phân loại',
+                        label: 'Lớp',
                         icon: Icons.category,
-                        hint: 'VD: Sinh viên, Giảng viên',
+                        hint: 'e.g., 12A1, 12A3',
                         readOnly: isSelectMode && selectedPerson != null,
                       ),
                     ],
                   ),
                 ),
                 actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Hủy'),
-                  ),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.save, size: 18),
-                    label: const Text('Lưu'),
-                    onPressed: () {
-                      if (nameController.text.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Tên là bắt buộc')),
-                        );
+                  TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Hủy')),
+                  FilledButton(
+                    onPressed: () async {
+                      final uuidInput = uuidController.text.trim();
+                      final name = nameController.text.trim();
+                      final studentId = studentIdController.text.trim();
+                      final email = emailController.text.trim().isEmpty ? null : emailController.text.trim();
+                      final classification = classificationController.text.trim();
+
+                      if (name.isEmpty) {
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(const SnackBar(content: Text('Tên là bắt buộc')));
                         return;
                       }
-                      // Get face image bytes
-                      Uint8List? faceImageBytes;
-                      if (faceIndex != null && widget.faceImages != null && faceIndex < widget.faceImages!.length) {
-                        final faceImg = widget.faceImages![faceIndex];
-                        faceImageBytes = Uint8List.fromList(imglib.encodePng(faceImg));
-                      }
 
+                      Navigator.of(context).pop();
                       _addPeopleInformation(
-                        uuidController.text,
-                        nameController.text,
-                        studentIdController.text,
-                        emailController.text,
-                        classificationController.text,
+                        uuidInput.isEmpty ? null : uuidInput,
+                        name,
+                        studentId,
+                        email,
+                        classification,
                         faceIndex != null ? widget.facePeoples[faceIndex].embedding : null,
-                        faceImageBytes,
+                        await facePreviewAsBytes(faceIndex!),
                       );
-                      Navigator.pop(context);
                     },
+                    child: const Text('Lưu'),
                   ),
                 ],
               ),
@@ -564,6 +561,7 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
         );
       },
     );
+    // controllers will be GC'd; no explicit dispose needed for ephemeral controllers here
   }
 
   Widget _buildTextFieldWithLabel({
@@ -571,216 +569,380 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
     required String label,
     required IconData icon,
     String? hint,
+    TextInputType keyboardType = TextInputType.text,
     bool readOnly = false,
   }) {
     return TextField(
       controller: controller,
       readOnly: readOnly,
-      style: TextStyle(
-        fontSize: 14,
-        color: readOnly ? Colors.grey.shade700 : Colors.black,
-      ),
+      keyboardType: keyboardType,
+      style: const TextStyle(fontSize: 16),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(fontSize: 14),
+        labelStyle: const TextStyle(fontSize: 16),
         hintText: hint,
-        hintStyle: const TextStyle(fontSize: 14),
+        hintStyle: const TextStyle(fontSize: 16),
         prefixIcon: Icon(icon, size: 20),
-        isDense: true,
-        filled: readOnly,
-        fillColor: readOnly ? Colors.grey.shade200 : Colors.transparent,
+        isDense: false,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Colors.grey, width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Colors.blue, width: 2),
+        ),
+        filled: readOnly,
+        fillColor: readOnly ? Colors.grey.shade100 : null,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       ),
     );
   }
 
+  /// Return a PNG `Uint8List` for the face preview at [faceIndex].
+  ///
+  /// Uses `widget.faceImages` (pre-cropped imglib.Image) when available.
+  /// Falls back to decoding and cropping the original image at `widget.imagePath`.
+  /// Returns null if the index is invalid or an error occurs.
+  Future<Uint8List?> facePreviewAsBytes(int faceIndex) async {
+    try {
+      if (faceIndex < 0 || faceIndex >= widget.facePeoples.length) return null;
+
+      // If the pre-cropped images are available, encode that image to PNG bytes.
+      if (widget.faceImages != null && faceIndex < widget.faceImages!.length) {
+        final img = widget.faceImages![faceIndex];
+        return Uint8List.fromList(imglib.encodePng(img));
+      }
+
+      // Fallback: decode and crop original image file
+      final file = File(widget.imagePath);
+      if (!file.existsSync()) return null;
+      final bytes = await file.readAsBytes();
+      final im = imglib.decodeImage(bytes);
+      if (im == null) return null;
+
+      // Determine crop rectangle in pixel coordinates
+      Rect r = widget.facePeoples[faceIndex].faceRect;
+      bool normalized = widget.rectsAreNormalized;
+      int x, y, w, h;
+
+      if (normalized) {
+        x = (r.left * im.width).round();
+        y = (r.top * im.height).round();
+        w = ((r.right - r.left) * im.width).round();
+        h = ((r.bottom - r.top) * im.height).round();
+      } else {
+        x = r.left.round();
+        y = r.top.round();
+        w = r.width.round();
+        h = r.height.round();
+      }
+
+      // Optionally add a small padding so the face isn't tight to border (same as other code)
+      const int pad = 10;
+      x = (x - pad).clamp(0, im.width - 1);
+      y = (y - pad).clamp(0, im.height - 1);
+      w = (w + pad * 2).clamp(0, im.width - x);
+      h = (h + pad * 2).clamp(0, im.height - y);
+
+      // Ensure width/height at least 1
+      if (w <= 0 || h <= 0) return null;
+
+      final cropped = imglib.copyCrop(im, x: x, y: y, width: w, height: h);
+      return Uint8List.fromList(imglib.encodePng(cropped));
+    } catch (e) {
+      debugPrint('facePreviewAsBytes error: $e');
+      return null;
+    }
+  }
+
+  /// Show confirmation dialog and call parent's onDelete if confirmed.
+  Future<void> _confirmAndDeleteImage() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete image?'),
+        content: const Text('Remove this image and its face items from the list?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete')),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        if (widget.onDelete != null) await widget.onDelete!();
+      } catch (e) {
+        debugPrint('onDelete callback error: $e');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final displayWidth = MediaQuery.of(context).size.width;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: Colors.grey.shade200),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          // Header with image path and delete button
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Colors.grey.shade50,
-            child: Row(
-              children: [
-                Icon(Icons.image, size: 18, color: Colors.grey.shade600),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    widget.imagePath.split('/').last,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade800,
-                      fontWeight: FontWeight.w500,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with face count and delete button
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (widget.onDelete != null)
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                    tooltip: 'Xóa ảnh',
-                    onPressed: () async {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Xóa ảnh'),
-                          content: const Text('Bạn có chắc chắn muốn xóa ảnh này?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text('Hủy'),
-                            ),
-                            ElevatedButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
-                                foregroundColor: Colors.white,
-                              ),
-                              child: const Text('Xóa'),
-                            ),
-                          ],
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.face,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
-                      );
-                      if (confirmed == true) {
-                        await widget.onDelete!();
-                      }
-                    },
-                  ),
-              ],
-            ),
-          ),
-          // Interactive viewer for the image and face boxes
-          AspectRatio(
-            aspectRatio: widget.imageWidth / widget.imageHeight,
-            child: GestureDetector(
-              onDoubleTapDown: (details) => _doubleTapDetails = details,
-              onDoubleTap: _handleDoubleTap,
-              onTapDown: _handleTapDown,
-              child: InteractiveViewer(
-                key: _interactiveViewerKey,
-                transformationController: _transformationController,
-                minScale: 0.1,
-                maxScale: 4.0,
-                child: CustomPaint(
-                  size: Size(
-                    widget.imageWidth.toDouble(),
-                    widget.imageHeight.toDouble(),
-                  ),
-                  painter: FacePainter(
-                    image: FileImage(File(widget.imagePath)),
-                    facePeoples: widget.facePeoples,
-                    imageSize: Size(
-                      widget.imageWidth.toDouble(),
-                      widget.imageHeight.toDouble(),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Phát hiện ${widget.facePeoples.length} học sinh',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ],
                     ),
-                    rectsAreNormalized: widget.rectsAreNormalized,
-                    selectedFaceIndex: _selectedFaceIndex,
-                    debugLastImagePoint: _debugLastImagePoint,
+                  ),
+                  const Spacer(),
+                  if (widget.onDelete != null)
+                    IconButton(
+                      icon: Icon(Icons.delete_outline, size: 20, color: Colors.red.shade400),
+                      tooltip: 'Nhấn và giữ hình ảnh để xóa',
+                      onPressed: null,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                ],
+              ),
+            ),
+
+            // Image viewer
+            SizedBox(
+              width: displayWidth,
+              child: AspectRatio(
+                aspectRatio: widget.imageWidth / widget.imageHeight,
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300, width: 2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  clipBehavior: Clip.hardEdge,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: ClipRect(
+                      child: InteractiveViewer(
+                        key: _interactiveViewerKey,
+                        transformationController: _transformationController,
+                        panEnabled: true,
+                        scaleEnabled: true,
+                        boundaryMargin: const EdgeInsets.all(100),
+                        minScale: 1.0,
+                        maxScale: 10.0,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onTapDown: _handleTapDown,
+                          onLongPress: () async {
+                            await _confirmAndDeleteImage();
+                          },
+                          onDoubleTapDown: (details) => _doubleTapDetails = details,
+                          onDoubleTap: _handleDoubleTap,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Image.file(
+                                File(widget.imagePath),
+                                fit: BoxFit.contain,
+                                width: double.infinity,
+                                height: double.infinity,
+                              ),
+                              if (widget.facePeoples.isNotEmpty)
+                                Positioned.fill(
+                                  child: CustomPaint(
+                                    painter: _FacePainter(
+                                      widget.facePeoples,
+                                      imageSize: Size(widget.imageWidth.toDouble(), widget.imageHeight.toDouble()),
+                                      selectedIndex: _selectedFaceIndex,
+                                      debugTapPoint: _debugLastImagePoint,
+                                      rectsAreNormalized: widget.rectsAreNormalized,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+
+            // Instructions
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.blue.shade100),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: Colors.blue.shade700),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Chạm vào khuôn mặt để thêm thông tin • Chạm đúp để phóng to • Nhấn và giữ để xóa',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue.shade900,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class FacePainter extends CustomPainter {
-  final ImageProvider image;
+class _FacePainter extends CustomPainter {
+  // final List<Rect> rects;
   final List<FacePeople> facePeoples;
   final Size imageSize;
+  final int? selectedIndex;
+  final Offset? debugTapPoint;
   final bool rectsAreNormalized;
-  final int? selectedFaceIndex;
-  final Offset? debugLastImagePoint;
 
-  FacePainter({
-    required this.image,
-    required this.facePeoples,
-    required this.imageSize,
-    this.rectsAreNormalized = false,
-    this.selectedFaceIndex,
-    this.debugLastImagePoint,
-  });
+  _FacePainter(
+      this.facePeoples, {
+        required this.imageSize,
+        this.selectedIndex,
+        this.debugTapPoint,
+        required this.rectsAreNormalized,
+      });
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Paint the face rectangles
+    final strokePaint = Paint()
+      ..color = Colors.red.withAlpha(200)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    // Figure out exactly how the image is painted inside this canvas using BoxFit.contain
+    final FittedSizes fitted = applyBoxFit(BoxFit.contain, imageSize, size);
+    final Size destinationSize = fitted.destination;
+    final double dx = (size.width - destinationSize.width) / 2.0;
+    final double dy = (size.height - destinationSize.height) / 2.0;
+
+    final double paintScaleX = destinationSize.width / imageSize.width;
+    final double paintScaleY = destinationSize.height / imageSize.height;
+
     for (var i = 0; i < facePeoples.length; i++) {
-      final r0 = facePeoples[i].faceRect;
-      final Rect rect = rectsAreNormalized
-          ? Rect.fromLTRB(
-              r0.left * size.width,
-              r0.top * size.height,
-              r0.right * size.width,
-              r0.bottom * size.height,
-            )
-          : Rect.fromLTWH(
-              r0.left * (size.width / imageSize.width),
-              r0.top * (size.height / imageSize.height),
-              r0.width * (size.width / imageSize.width),
-              r0.height * (size.height / imageSize.height),
-            );
+      final String? uuid = facePeoples[i].dbId;
+      final rect = facePeoples[i].faceRect;
 
-      final isSelected = i == selectedFaceIndex;
-      final hasDbId = facePeoples[i].dbId != null;
+      // convert rect to painted coordinates. If rects are normalized (0..1) then they should be
+      // provided as such by the caller; we can't detect that reliably here, but the hit-test
+      // already attempts to handle normalized rects. For painting we'll treat the passed rects
+      // as image-pixel coordinates if their right/bottom are > 1. Otherwise we treat them
+      // as normalized fractions and convert accordingly.
+      Rect paintedRect;
+      if (rect.right <= 1.01 && rect.bottom <= 1.01) {
+        // normalized rect
+        final left = dx + rect.left * destinationSize.width;
+        final top = dy + rect.top * destinationSize.height;
+        final right = dx + rect.right * destinationSize.width;
+        final bottom = dy + rect.bottom * destinationSize.height;
+        paintedRect = Rect.fromLTRB(left, top, right, bottom);
+      } else {
+        // image pixel rect
+        final left = dx + rect.left * paintScaleX;
+        final top = dy + rect.top * paintScaleY;
+        final right = dx + rect.right * paintScaleX;
+        final bottom = dy + rect.bottom * paintScaleY;
+        paintedRect = Rect.fromLTRB(left, top, right, bottom);
+      }
 
-      final paint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = isSelected ? 4.0 : 2.0
-        ..color = hasDbId
-            ? (isSelected ? Colors.green.shade700 : Colors.green.shade400)
-            : (isSelected ? Colors.red.shade700 : Colors.red.shade400);
+      if (selectedIndex != null && i == selectedIndex) {
+        final fill = Paint()..color = Colors.green.withAlpha((0.2 * 255).round());
+        canvas.drawRect(paintedRect, fill);
+        final highlight = Paint()
+          ..color = Colors.grey
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.5;
+        canvas.drawRect(paintedRect, highlight);
+      } else {
+        if (uuid != null && uuid.isNotEmpty) {
+          print('Drawing highlighted rect for known uuid=$uuid at index=$i');
+          final highlight = Paint()
+            ..color = Colors.green
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.5;
+          canvas.drawRect(paintedRect, highlight);
+        } else {
+          canvas.drawRect(paintedRect, strokePaint);
+        }
+      }
 
-      canvas.drawRect(rect, paint);
-
-      // Optionally, draw a label
-      final textPainter = TextPainter(
-        text: TextSpan(
-          text: 'Khuôn mặt ${i + 1}${hasDbId ? " (Đã nhận dạng)" : ""}',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 12.0,
-            backgroundColor: paint.color.withValues(alpha: 0.7),
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      );
-      textPainter.layout();
-      textPainter.paint(canvas, rect.topLeft - Offset(0, textPainter.height));
+      // draw index label for debugging
+      // final textPainter = TextPainter(
+      //   text: TextSpan(text: '$i', style: const TextStyle(color: Colors.white, fontSize: 12, backgroundColor: Colors.black45)),
+      //   textDirection: TextDirection.ltr,
+      // );
+      // textPainter.layout();
+      // final labelOffset = Offset(paintedRect.left + 2, paintedRect.top + 2);
+      // textPainter.paint(canvas, labelOffset);
     }
 
-    // Debug: draw the last tapped point if it didn't hit a face
-    if (debugLastImagePoint != null) {
-      final Offset pointInWidget = Offset(
-        debugLastImagePoint!.dx * (size.width / imageSize.width),
-        debugLastImagePoint!.dy * (size.height / imageSize.height),
-      );
-      final paint = Paint()
-        ..color = Colors.yellow
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(pointInWidget, 8.0, paint);
-    }
+    // Draw debug tapped point (in image coords) if provided
+    // if (debugTapPoint != null) {
+    //   final dotPaint = Paint()..color = Colors.yellow;
+    //   final dxp = dx + debugTapPoint!.dx * paintScaleX;
+    //   final dyp = dy + debugTapPoint!.dy * paintScaleY;
+    //   canvas.drawCircle(Offset(dxp, dyp), 6.0, dotPaint);
+    //   final tp = TextPainter(
+    //     text: const TextSpan(text: 'tap', style: TextStyle(color: Colors.yellow, fontSize: 10, backgroundColor: Colors.black45)),
+    //     textDirection: TextDirection.ltr,
+    //   );
+    //   tp.layout();
+    //   tp.paint(canvas, Offset(dxp + 6, dyp - 6));
+    // }
   }
 
   @override
-  bool shouldRepaint(covariant FacePainter oldDelegate) {
-    return oldDelegate.image != image ||
-        oldDelegate.facePeoples != facePeoples ||
-        oldDelegate.imageSize != imageSize ||
-        oldDelegate.rectsAreNormalized != rectsAreNormalized ||
-        oldDelegate.selectedFaceIndex != selectedFaceIndex ||
-        oldDelegate.debugLastImagePoint != debugLastImagePoint;
-  }
+  bool shouldRepaint(covariant _FacePainter oldDelegate) =>
+      facePeoples != oldDelegate.facePeoples ||
+          imageSize != oldDelegate.imageSize ||
+          selectedIndex != oldDelegate.selectedIndex ||
+          debugTapPoint != oldDelegate.debugTapPoint;
+
+// @override
+// bool shouldRepaint(covariant _FacePainter oldDelegate) =>
+//     true;
 }

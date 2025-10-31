@@ -125,8 +125,8 @@ class FoundPeoplePage extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Text(
-              'Người đã tìm thấy (${people.length})',
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              '',
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
             ),
           ],
         ),
@@ -178,7 +178,7 @@ class FoundPeoplePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      'Không tìm thấy người',
+                      'Không tìm thấy học sinh',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
@@ -187,7 +187,7 @@ class FoundPeoplePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Không có người quen nào được phát hiện trong ảnh',
+                      'Không có học sinh quen nào được phát hiện trong ảnh',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade500,
@@ -224,7 +224,7 @@ class FoundPeoplePage extends StatelessWidget {
                         children: [
                           _buildSummaryItem(
                             icon: Icons.person,
-                            label: 'Người',
+                            label: 'học sinh',
                             value: '${people.length}',
                           ),
                           Container(

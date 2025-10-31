@@ -549,8 +549,8 @@ class _HomePageState extends State<HomePage> {
                       const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.people),
-                        title: const Text('Quản lý người'),
-                        subtitle: const Text('Xem, sửa và xóa người'),
+                        title: const Text('Quản lý học sinh'),
+                        subtitle: const Text('Xem, sửa và xóa học sinh'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
                           Navigator.pop(context);
@@ -652,7 +652,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       _buildStatItem(
                         icon: Icons.person,
-                        label: 'Người',
+                        label: 'học sinh',
                         value: '${_dbPeoples.length}',
                       ),
                     ],
@@ -797,7 +797,7 @@ class _HomePageState extends State<HomePage> {
                             },
                             icon: const Icon(Icons.people_alt),
                             label: const Text(
-                              'Hiển thị người đã tìm thấy',
+                              'Hiển thị học sinh đã tìm thấy',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,

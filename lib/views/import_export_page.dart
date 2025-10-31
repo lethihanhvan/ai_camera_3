@@ -130,7 +130,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                       const Divider(height: 1),
                       const SizedBox(height: 16),
                       Text(
-                        'Xuất tất cả dữ liệu người sang JSON hoặc nhập từ tệp sao lưu. Khi nhập, các bản ghi hiện có sẽ được hợp nhất dựa trên ID.',
+                        'Xuất tất cả dữ liệu học sinh sang JSON hoặc nhập từ tệp sao lưu. Khi nhập, các bản ghi hiện có sẽ được hợp nhất dựa trên ID.',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade700,
@@ -202,7 +202,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                                     'Tạo một tệp sao lưu',
                                     style: TextStyle(
                                       color: Colors.white.withOpacity(0.9),
-                                      fontSize: 14,
+                                      fontSize: 12,
                                     ),
                                   ),
                                 ],
@@ -270,7 +270,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                                     'Khôi phục từ bản sao lưu',
                                     style: TextStyle(
                                       color: Colors.grey.shade600,
-                                      fontSize: 14,
+                                      fontSize: 12,
                                     ),
                                   ),
                                 ],
@@ -434,7 +434,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
       
       if (people.isEmpty) {
         setState(() {
-          _statusMessage = 'Không có dữ liệu người để xuất';
+          _statusMessage = 'Không có dữ liệu học sinh để xuất';
           _isLoading = false;
         });
         return;
@@ -468,7 +468,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
       await file.writeAsString(jsonString);
 
       setState(() {
-        _statusMessage = 'Đã xuất thành công ${people.length} người vào:\n${file.path}';
+        _statusMessage = 'Đã xuất thành công ${people.length} học sinh vào:\n${file.path}';
         _isLoading = false;
       });
 
@@ -564,8 +564,8 @@ class _ImportExportPageState extends State<ImportExportPage> {
 
       setState(() {
         _statusMessage = 'Nhập thành công!\n'
-            'Đã tạo: $createdCount người mới\n'
-            'Đã cập nhật: $updatedCount người hiện có';
+            'Đã tạo: $createdCount học sinh mới\n'
+            'Đã cập nhật: $updatedCount học sinh hiện có';
         _isLoading = false;
       });
     } catch (e) {
