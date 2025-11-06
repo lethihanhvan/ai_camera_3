@@ -101,6 +101,7 @@ class _HomePageState extends State<HomePage> {
   // int? _imageHeight;
 
   bool _isLoading = true;
+  bool _isReloadingDb = false;
 
   List<FaceImageDTO> _faceImages = [];
   List<People> _dbPeoples = [];
@@ -111,8 +112,8 @@ class _HomePageState extends State<HomePage> {
   late File jsonFile;
   dynamic data = {};
   late List e1;
-  double threshold = 1.0;
-  // double threshold = 0.35;
+  // double threshold = 1.0;
+  double threshold = 0.9;
   // Future<void> _openCamera() async {
   //   // Push CameraScreen and wait for the captured photo path
   //   final result = await Navigator.push(
@@ -153,52 +154,53 @@ class _HomePageState extends State<HomePage> {
   }
 
   reloadDbPeoples() async {
-    // Load people from database
-    var dbPeoples = await DatabaseHelper().getAllPeople();
-
     setState(() {
-      _dbPeoples = dbPeoples;
-
-      Future.delayed(const Duration(milliseconds: 100), () {
-        setState(() {
-          _faceImages = _faceImages.map((faceImageItem) {
-            var file = File(faceImageItem.imagePath!);
-            imglib.Image convertedImage = imglib.decodeImage(file.readAsBytesSync())!;
-            faceImageItem.setFacePeoples(
-                faceImageItem.facePeoples.map((facePeople) {
-                  // if (facePeople.dbId != null) {
-                  //   // already has dbId, skip
-                  //   return facePeople;
-                  // }
-                  double x, y, w, h;
-                  var rect = facePeople.faceRect;
-
-                  x = (rect.left - 10);
-                  y = (rect.top - 10);
-                  w = (rect.width + 20);
-                  h = (rect.height + 20);
-
-                  imglib.Image croppedImage = imglib.copyCrop(
-                      convertedImage, x: x.round(), y: y.round(),width:  w.round(), height:  h.round());
-
-                  // save cropped image for debugging
-                  // final croppedFile = File('${tempDir.path}/crop_${DateTime.now().millisecondsSinceEpoch}.png');
-                  // await croppedFile.writeAsBytes(imglib.encodePng(croppedImage));
-                  // debugPrint("Cropped face saved at: " + croppedFile.path);
-
-                  List<double> embeddingData = buildEmbeddingData(croppedImage);
-                  String? dbId = detectPeopleByDBAndEmbedding(croppedImage, embeddingData);
-                  facePeople.dbId = dbId;
-                  return facePeople;
-                }).toList()
-            );
-            return faceImageItem;
-          }).toList();
-        });
-      });
+      _isReloadingDb = true;
     });
 
+    try {
+      // Load people from database
+      var dbPeoples = await DatabaseHelper().getAllPeople();
 
+      setState(() {
+        _dbPeoples = dbPeoples;
+
+        Future.delayed(const Duration(milliseconds: 100), () {
+          setState(() {
+            _faceImages = _faceImages.map((faceImageItem) {
+              var file = File(faceImageItem.imagePath!);
+              imglib.Image convertedImage = imglib.decodeImage(file.readAsBytesSync())!;
+              faceImageItem.setFacePeoples(
+                  faceImageItem.facePeoples.map((facePeople) {
+                    double x, y, w, h;
+                    var rect = facePeople.faceRect;
+
+                    x = (rect.left - 10);
+                    y = (rect.top - 10);
+                    w = (rect.width + 20);
+                    h = (rect.height + 20);
+
+                    imglib.Image croppedImage = imglib.copyCrop(
+                        convertedImage, x: x.round(), y: y.round(), width: w.round(), height: h.round());
+
+                    List<double> embeddingData = buildEmbeddingData(croppedImage);
+                    String? dbId = detectPeopleByDBAndEmbedding(croppedImage, embeddingData);
+                    facePeople.dbId = dbId;
+                    return facePeople;
+                  }).toList()
+              );
+              return faceImageItem;
+            }).toList();
+            _isReloadingDb = false;
+          });
+        });
+      });
+    } catch (e) {
+      debugPrint('Error reloading DB peoples: $e');
+      setState(() {
+        _isReloadingDb = false;
+      });
+    }
   }
 
 
@@ -348,6 +350,10 @@ class _HomePageState extends State<HomePage> {
 
     List<FaceImageDTO> faceImages = [];
 
+    setState(() {
+      _isReloadingDb = true;
+    });
+
     if (result != null) {
       for (var asset in result) {
         File? file = await asset.file;
@@ -410,6 +416,7 @@ class _HomePageState extends State<HomePage> {
 
     setState(() {
       _faceImages = [..._faceImages, ...faceImages];
+      _isReloadingDb = false;
     });
 
   }
@@ -481,338 +488,351 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     }
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Icon(Icons.face_retouching_natural,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Nhận dạng điểm danh AI',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.settings_outlined,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-            tooltip: 'Cài đặt',
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+
+
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: AppBar(
+            title: Row(
+              children: [
+                Icon(Icons.face_retouching_natural,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
-                builder: (context) => SafeArea(child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          children: [
-                            Icon(Icons.settings, color: Theme.of(context).colorScheme.primary),
-                            const SizedBox(width: 12),
-                            const Text(
-                              'Cài đặt',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.people),
-                        title: const Text('Quản lý học sinh'),
-                        subtitle: const Text('Xem, sửa và xóa học sinh'),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const ManagePeoplePage()),
-                          );
-                        },
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.import_export),
-                        title: const Text('Nhập/Xuất dữ liệu'),
-                        subtitle: const Text('Sao lưu và khôi phục cơ sở dữ liệu'),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const ImportExportPage()),
-                          );
-                        },
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.folder_outlined),
-                        title: const Text('Tệp báo cáo'),
-                        subtitle: const Text('Xem các báo cáo đã xuất'),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const ExportedFilesPage()),
-                          );
-                        },
-                      ),
-                    ],
+                const SizedBox(width: 12),
+                const Text(
+                  'Nhận dạng điểm danh AI',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                ),
+              ],
+            ),
+            actions: [
+              IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                )),
-              );
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Theme.of(context).colorScheme.primary.withOpacity(0.05),
-              Colors.white,
+                  child: Icon(
+                    Icons.settings_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                tooltip: 'Cài đặt',
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    builder: (context) => SafeArea(child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade300,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Row(
+                              children: [
+                                Icon(Icons.settings, color: Theme.of(context).colorScheme.primary),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Cài đặt',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Divider(height: 1),
+                          ListTile(
+                            leading: const Icon(Icons.people),
+                            title: const Text('Quản lý học sinh'),
+                            subtitle: const Text('Xem, sửa và xóa học sinh'),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const ManagePeoplePage()),
+                              );
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.import_export),
+                            title: const Text('Nhập/Xuất dữ liệu'),
+                            subtitle: const Text('Sao lưu và khôi phục cơ sở dữ liệu'),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const ImportExportPage()),
+                              );
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.folder_outlined),
+                            title: const Text('Tệp báo cáo'),
+                            subtitle: const Text('Xem các báo cáo đã xuất'),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const ExportedFilesPage()),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    )),
+                  );
+                },
+              ),
+              const SizedBox(width: 8),
             ],
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Stats header
-              if (_faceImages.isNotEmpty)
-                Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Theme.of(context).colorScheme.primary,
-                        Theme.of(context).colorScheme.secondary,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildStatItem(
-                        icon: Icons.photo_library,
-                        label: 'Ảnh',
-                        value: '${_faceImages.length}',
-                      ),
-                      Container(
-                        width: 1,
-                        height: 40,
-                        color: Colors.white.withOpacity(0.3),
-                      ),
-                      _buildStatItem(
-                        icon: Icons.face,
-                        label: 'Khuôn mặt',
-                        value: '${_faceImages.fold<int>(0, (sum, img) => sum + img.facePeoples.length)}',
-                      ),
-                      Container(
-                        width: 1,
-                        height: 40,
-                        color: Colors.white.withOpacity(0.3),
-                      ),
-                      _buildStatItem(
-                        icon: Icons.person,
-                        label: 'học sinh',
-                        value: '${_dbPeoples.length}',
-                      ),
-                    ],
-                  ),
-                ),
-
-              // Scrollable area for previews
-              Expanded(
-                child: _faceImages.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(32),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade100,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.photo_library_outlined,
-                                size: 64,
-                                color: Colors.grey.shade400,
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            Text(
-                              'Không có ảnh nào được chọn',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Nhấn "Chọn ảnh" để bắt đầu',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade500,
-                              ),
-                            ),
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                  Colors.white,
+                ],
+              ),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // Stats header
+                  if (_faceImages.isNotEmpty)
+                    Container(
+                      margin: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Theme.of(context).colorScheme.primary,
+                            Theme.of(context).colorScheme.secondary,
                           ],
                         ),
-                      )
-                    : ListView.builder(
-                        key: Key('main_column_$timeKey'),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        itemCount: _faceImages.length,
-                        itemBuilder: (context, i) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: FaceImagePreview(
-                              imagePath: _faceImages[i].imagePath!,
-                              facePeoples: _faceImages[i].facePeoples,
-                              imageWidth: _faceImages[i].imageWidth!,
-                              imageHeight: _faceImages[i].imageHeight!,
-                              faceImages: _faceImages[i].faceImages,
-                              onAddPeopleCallback: () async {
-                                await reloadDbPeoples();
-                              },
-                              onDelete: () async {
-                                setState(() {
-                                  if (i >= 0 && i < _faceImages.length) {
-                                    _faceImages.removeAt(i);
-                                  }
-                                });
-                                await reloadDbPeoples();
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: const Text('Đã xóa ảnh'),
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildStatItem(
+                            icon: Icons.photo_library,
+                            label: 'Ảnh',
+                            value: '${_faceImages.length}',
+                          ),
+                          Container(
+                            width: 1,
+                            height: 40,
+                            color: Colors.white.withOpacity(0.3),
+                          ),
+                          _buildStatItem(
+                            icon: Icons.face,
+                            label: 'Khuôn mặt',
+                            value: '${_faceImages.fold<int>(0, (sum, img) => sum + img.facePeoples.length)}',
+                          ),
+                          Container(
+                            width: 1,
+                            height: 40,
+                            color: Colors.white.withOpacity(0.3),
+                          ),
+                          _buildStatItem(
+                            icon: Icons.person,
+                            label: 'học sinh',
+                            value: '${_dbPeoples.length}',
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // Scrollable area for previews
+                  Expanded(
+                    child: _faceImages.isEmpty
+                        ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(32),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.photo_library_outlined,
+                              size: 64,
+                              color: Colors.grey.shade400,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'Không có ảnh nào được chọn',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Nhấn "Chọn ảnh" để bắt đầu',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                        : ListView.builder(
+                      key: Key('main_column_$timeKey'),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      itemCount: _faceImages.length,
+                      itemBuilder: (context, i) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: FaceImagePreview(
+                            imagePath: _faceImages[i].imagePath!,
+                            facePeoples: _faceImages[i].facePeoples,
+                            imageWidth: _faceImages[i].imageWidth!,
+                            imageHeight: _faceImages[i].imageHeight!,
+                            faceImages: _faceImages[i].faceImages,
+                            onAddPeopleCallback: () async {
+                              await reloadDbPeoples();
+                            },
+                            onDelete: () async {
+                              setState(() {
+                                if (i >= 0 && i < _faceImages.length) {
+                                  _faceImages.removeAt(i);
+                                }
+                              });
+                              await reloadDbPeoples();
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text('Đã xóa ảnh'),
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  // Bottom action buttons
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, -4),
+                        ),
+                      ],
+                    ),
+                    child: SafeArea(
+                      top: false,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            height: 52,
+                            child: ElevatedButton.icon(
+                              onPressed: _openImagePickers,
+                              icon: const Icon(Icons.add_photo_alternate),
+                              label: const Text(
+                                'Chọn ảnh',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                elevation: 0,
+                                shadowColor: Colors.transparent,
+                              ),
+                            ),
+                          ),
+                          if (_faceImages.isNotEmpty) const SizedBox(height: 12),
+                          if (_faceImages.isNotEmpty)
+                            SizedBox(
+                              width: double.infinity,
+                              height: 52,
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  final mapData = listAndShowFoundPeople();
+                                  final found = mapData["people"] as List<People>;
+                                  final List<String> imagePaths = mapData["imagesPaths"] as List<String>;
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => FoundPeoplePage(
+                                        people: found,
+                                        imagesPaths: imagePaths,
                                       ),
                                     ),
                                   );
-                                }
-                              },
-                            ),
-                          );
-                        },
-                      ),
-              ),
-
-              // Bottom action buttons
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, -4),
-                    ),
-                  ],
-                ),
-                child: SafeArea(
-                  top: false,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: ElevatedButton.icon(
-                          onPressed: _openImagePickers,
-                          icon: const Icon(Icons.add_photo_alternate),
-                          label: const Text(
-                            'Chọn ảnh',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            elevation: 0,
-                            shadowColor: Colors.transparent,
-                          ),
-                        ),
-                      ),
-                      if (_faceImages.isNotEmpty) const SizedBox(height: 12),
-                      if (_faceImages.isNotEmpty)
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              final mapData = listAndShowFoundPeople();
-                              final found = mapData["people"] as List<People>;
-                              final List<String> imagePaths = mapData["imagesPaths"] as List<String>;
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => FoundPeoplePage(
-                                    people: found,
-                                    imagesPaths: imagePaths,
+                                },
+                                icon: const Icon(Icons.people_alt),
+                                label: const Text(
+                                  'Hiển thị học sinh đã tìm thấy',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                              );
-                            },
-                            icon: const Icon(Icons.people_alt),
-                            label: const Text(
-                              'Hiển thị học sinh đã tìm thấy',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                          ),
-                        ),
-                    ],
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
-      ),
+        if (_isReloadingDb)
+          Container(
+            color: Colors.black.withOpacity(0.3),
+            child: const Center(
+              child: CircularProgressIndicator(),
+            ),
+          ),
+      ],
     );
   }
 

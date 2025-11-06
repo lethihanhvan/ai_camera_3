@@ -730,7 +730,9 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
                     IconButton(
                       icon: Icon(Icons.delete_outline, size: 20, color: Colors.red.shade400),
                       tooltip: 'Nhấn và giữ hình ảnh để xóa',
-                      onPressed: null,
+                      onPressed: () async {
+                        widget.onDelete!();
+                      },
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
