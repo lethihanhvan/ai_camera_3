@@ -64,7 +64,11 @@ double euclideanDistance(List e1, List e2) {
   }
   return sqrt(sum);
 }
-double cosineDistance_old(List<double> a, List b) {
+
+double cosineDistance(List<double> a, List b) {
+  if (a.length != b.length) {
+    throw ArgumentError('Vectors must have same length');
+  }
   double dot = 0.0;
   double normA = 0.0;
   double normB = 0.0;
@@ -73,10 +77,14 @@ double cosineDistance_old(List<double> a, List b) {
     normA += a[i] * a[i];
     normB += b[i] * b[i];
   }
-  return 1 - (dot / (math.sqrt(normA) * math.sqrt(normB)));
+  final normAVal = math.sqrt(normA);
+  final normBVal = math.sqrt(normB);
+  if (normAVal == 0 || normBVal == 0) return 1.0;
+  final cosineSim = (dot / (normAVal * normBVal)).clamp(-1.0, 1.0);
+  return 1.0 - cosineSim;
 }
 
-double cosineDistance(List<double> a, List b) {
+double cosineDistance_new(List<double> a, List b) {
   if (a.length != b.length) {
     throw ArgumentError('Embeddings must have the same length');
   }

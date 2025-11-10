@@ -114,7 +114,7 @@ class _HomePageState extends State<HomePage> {
   late List e1;
   // double threshold = 1.0;
   double threshold = 0.4;
-  int minSizeImage = 60;
+  int minSizeImage = 112;
   // Future<void> _openCamera() async {
   //   // Push CameraScreen and wait for the captured photo path
   //   final result = await Navigator.push(
@@ -340,13 +340,14 @@ class _HomePageState extends State<HomePage> {
     // Collect the smallest distance for each person (across their embeddings)
     for (People person in _dbPeoples) {
       for (List<double> dbEmb in person.embeddings) {
+        var index = person.embeddings.indexOf(dbEmb);
         // final double currDist = euclideanDistance(dbEmb, currEmb);
         final double currDist = cosineDistance(dbEmb, currEmb);
         if (currDist <= threshold) {
           final prev = mapMatchPeople[person.id];
           if (prev == null || currDist < prev) {
             mapMatchPeople[person.id] = currDist;
-            print("Compare ${person.name} dist: $currDist");
+            print("Compare ${person.name} dist: $currDist index: $index" );
             // < threshold -> cunfg nguoi -> thoat
             // continue;
           }
