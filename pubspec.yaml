@@ -80,6 +80,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - assets/face_detect_v1.tflite
     - assets/mobilefacenet.tflite
     - assets/tan.txt
   #   - images/a_dot_burr.jpeg

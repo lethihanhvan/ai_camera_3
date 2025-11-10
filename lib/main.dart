@@ -113,7 +113,7 @@ class _HomePageState extends State<HomePage> {
   dynamic data = {};
   late List e1;
   // double threshold = 1.0;
-  double threshold = 0.9;
+  double threshold = 0.3;
   // Future<void> _openCamera() async {
   //   // Push CameraScreen and wait for the captured photo path
   //   final result = await Navigator.push(
@@ -179,6 +179,7 @@ class _HomePageState extends State<HomePage> {
                     y = (rect.top - 10);
                     w = (rect.width + 20);
                     h = (rect.height + 20);
+
 
                     imglib.Image croppedImage = imglib.copyCrop(
                         convertedImage, x: x.round(), y: y.round(), width: w.round(), height: h.round());
@@ -251,12 +252,14 @@ class _HomePageState extends State<HomePage> {
       // load file tan.txt from assets
       // String test = await rootBundle.loadString('assets/tan.txt');
 
+      String fileName = "mobilefacenet";
+      // String fileName = "face_detect_v1";
       // Load model bytes from asset
-      final dataModelFile = await rootBundle.load('assets/mobilefacenet.tflite');
+      final dataModelFile = await rootBundle.load('assets/${fileName}.tflite');
 
       // Write them to a temporary file
       final tempDir = await getApplicationDocumentsDirectory();
-      final modelFile = File('${tempDir.path}/mobilefacenet.tflite');
+      final modelFile = File('${tempDir.path}/${fileName}.tflite');
       await modelFile.writeAsBytes(
         dataModelFile.buffer.asUint8List(dataModelFile.offsetInBytes, dataModelFile.lengthInBytes),
         flush: true,
@@ -300,17 +303,32 @@ class _HomePageState extends State<HomePage> {
     return compareWithDB(embedding);
   }
 
+  // List<double> buildEmbeddingData(imglib.Image img) {
+  //   var input = imageToByteListFloat32(img, 112, 128, 128);
+  //   // Reshape input for TFLite
+  //   var inputTensor = input.reshape([1, 112, 112, 3]);
+  //   // Prepare output buffer
+  //   var output = List.filled(192, 0.0).reshape([1, 192]);
+  //   // Run inference
+  //   interpreter.run(inputTensor, output);
+  //   // Flatten output
+  //   var embedding = List<double>.from(output[0]);
+  //   return embedding;
+  // }
+
+  List<double> normalizeEmbedding(List<double> embedding) {
+    double sum = embedding.fold(0.0, (a, b) => a + b * b);
+    double norm = sqrt(sum);
+    return embedding.map((e) => e / norm).toList();
+  }
+
   List<double> buildEmbeddingData(imglib.Image img) {
     var input = imageToByteListFloat32(img, 112, 128, 128);
-    // Reshape input for TFLite
     var inputTensor = input.reshape([1, 112, 112, 3]);
-    // Prepare output buffer
     var output = List.filled(192, 0.0).reshape([1, 192]);
-    // Run inference
     interpreter.run(inputTensor, output);
-    // Flatten output
     var embedding = List<double>.from(output[0]);
-    return embedding;
+    return normalizeEmbedding(embedding); // Add normalization
   }
 
   String? compareWithDB(List currEmb) {
@@ -321,7 +339,8 @@ class _HomePageState extends State<HomePage> {
     // Collect the smallest distance for each person (across their embeddings)
     for (People person in _dbPeoples) {
       for (List<double> dbEmb in person.embeddings) {
-        final double currDist = euclideanDistance(dbEmb, currEmb);
+        // final double currDist = euclideanDistance(dbEmb, currEmb);
+        final double currDist = cosineDistance(dbEmb, currEmb);
         if (currDist <= threshold) {
           final prev = mapMatchPeople[person.id];
           if (prev == null || currDist < prev) {
@@ -335,6 +354,10 @@ class _HomePageState extends State<HomePage> {
 
     // Find the entry with the minimum distance
     final bestEntry = mapMatchPeople.entries.reduce((a, b) => a.value <= b.value ? a : b);
+
+    // Only return if confidence is high enough (distance < 0.25 = very confident)
+    // if (bestEntry.value > 0.25) return null;
+
     debugPrint("Match People Distances: $mapMatchPeople, best: ${bestEntry.key}=${bestEntry.value}");
 
     return bestEntry.key;
@@ -385,6 +408,8 @@ class _HomePageState extends State<HomePage> {
           List<FacePeople> facePeoples = [];
           for (var rect in rects) {
             double x, y, w, h;
+            if (rect.width < 40 || rect.height < 40) continue;
+
             x = (rect.left - 10);
             y = (rect.top - 10);
             w = (rect.width + 20);

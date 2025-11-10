@@ -64,7 +64,7 @@ double euclideanDistance(List e1, List e2) {
   }
   return sqrt(sum);
 }
-double cosineDistance(List<double> a, List<double> b) {
+double cosineDistance_old(List<double> a, List b) {
   double dot = 0.0;
   double normA = 0.0;
   double normB = 0.0;
@@ -74,4 +74,31 @@ double cosineDistance(List<double> a, List<double> b) {
     normB += b[i] * b[i];
   }
   return 1 - (dot / (math.sqrt(normA) * math.sqrt(normB)));
+}
+
+double cosineDistance(List<double> a, List b) {
+  if (a.length != b.length) {
+    throw ArgumentError('Embeddings must have the same length');
+  }
+
+  double dot = 0.0;
+  double normA = 0.0;
+  double normB = 0.0;
+
+  for (int i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+
+  // Add epsilon to prevent division by zero
+  const double epsilon = 1e-10;
+  normA = math.sqrt(normA) + epsilon;
+  normB = math.sqrt(normB) + epsilon;
+
+  // Clamp cosine similarity to [-1, 1] to handle floating point errors
+  double cosineSim = dot / (normA * normB);
+  cosineSim = cosineSim.clamp(-1.0, 1.0);
+
+  return 1.0 - cosineSim;
 }
