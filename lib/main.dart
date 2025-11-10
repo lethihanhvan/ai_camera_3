@@ -346,8 +346,9 @@ class _HomePageState extends State<HomePage> {
           final prev = mapMatchPeople[person.id];
           if (prev == null || currDist < prev) {
             mapMatchPeople[person.id] = currDist;
+            print("Compare ${person.name} dist: $currDist");
             // < threshold -> cunfg nguoi -> thoat
-            continue;
+            // continue;
           }
         }
       }
