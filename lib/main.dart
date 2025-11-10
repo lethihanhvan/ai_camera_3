@@ -9,6 +9,7 @@ import 'package:ai_camera/views/face_image_preview.dart';
 import 'package:ai_camera/views/import_export_page.dart';
 import 'package:ai_camera/views/manage_people_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_face_api/flutter_face_api.dart' as face_api;
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
 import 'package:image/image.dart' as imglib;
@@ -23,6 +24,8 @@ import 'package:heic_to_png_jpg/heic_to_png_jpg.dart';
 import 'db/database_helper.dart';
 import 'dto/face_people.dart';
 import 'dto/people.dart';
+
+var faceSdk = face_api.FaceSDK.instance;
 
 void main() {
   runApp(const MyApp());
@@ -114,6 +117,7 @@ class _HomePageState extends State<HomePage> {
   late List e1;
   // double threshold = 1.0;
   double threshold = 0.3;
+  double thresholdForFaceApi = 0.9;
   // Future<void> _openCamera() async {
   //   // Push CameraScreen and wait for the captured photo path
   //   final result = await Navigator.push(
@@ -166,32 +170,34 @@ class _HomePageState extends State<HomePage> {
         _dbPeoples = dbPeoples;
 
         Future.delayed(const Duration(milliseconds: 100), () {
-          setState(() {
-            _faceImages = _faceImages.map((faceImageItem) {
+          setState(() async {
+            _faceImages = await Future.wait(_faceImages.map((faceImageItem) async {
               var file = File(faceImageItem.imagePath!);
               imglib.Image convertedImage = imglib.decodeImage(file.readAsBytesSync())!;
-              faceImageItem.setFacePeoples(
-                  faceImageItem.facePeoples.map((facePeople) {
-                    double x, y, w, h;
-                    var rect = facePeople.faceRect;
 
-                    x = (rect.left - 10);
-                    y = (rect.top - 10);
-                    w = (rect.width + 20);
-                    h = (rect.height + 20);
+              List<FacePeople> list = await Future.wait(faceImageItem.facePeoples.map((facePeople) async {
+                double x, y, w, h;
+                var rect = facePeople.faceRect;
+
+                x = (rect.left - 10);
+                y = (rect.top - 10);
+                w = (rect.width + 20);
+                h = (rect.height + 20);
 
 
-                    imglib.Image croppedImage = imglib.copyCrop(
-                        convertedImage, x: x.round(), y: y.round(), width: w.round(), height: h.round());
+                imglib.Image croppedImage = imglib.copyCrop(
+                    convertedImage, x: x.round(), y: y.round(), width: w.round(), height: h.round());
 
-                    List<double> embeddingData = buildEmbeddingData(croppedImage);
-                    String? dbId = detectPeopleByDBAndEmbedding(croppedImage, embeddingData);
-                    facePeople.dbId = dbId;
-                    return facePeople;
-                  }).toList()
-              );
+                // List<double> embeddingData = buildEmbeddingData(croppedImage);
+                String? dbId = await detectPeopleByDBAndEmbedding(croppedImage);
+                facePeople.dbId = dbId;
+                return facePeople;
+              }).toList());
+              faceImageItem.setFacePeoples(list);
               return faceImageItem;
-            }).toList();
+            }).toList());
+
+
             _isReloadingDb = false;
           });
         });
@@ -209,13 +215,15 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    loadModel().then((value) async {
-      await loadDbPeoples();
-      await _requestPermissions();
-      setState(() {
-        _isLoading = false;
-      });
-    });
+    // loadModel().then((value) async {
+    //   await loadDbPeoples();
+    //   await _requestPermissions();
+    //   setState(() {
+    //     _isLoading = false;
+    //   });
+    // });
+
+    initialize();
 
 
   }
@@ -247,60 +255,61 @@ class _HomePageState extends State<HomePage> {
   }
 
 
-  Future loadModel() async {
-    try {
-      // load file tan.txt from assets
-      // String test = await rootBundle.loadString('assets/tan.txt');
+  // Future loadModel() async {
+  //   try {
+  //     // load file tan.txt from assets
+  //     // String test = await rootBundle.loadString('assets/tan.txt');
+  //
+  //     String fileName = "mobilefacenet";
+  //     // String fileName = "face_detect_v1";
+  //     // Load model bytes from asset
+  //     final dataModelFile = await rootBundle.load('assets/${fileName}.tflite');
+  //
+  //     // Write them to a temporary file
+  //     final tempDir = await getApplicationDocumentsDirectory();
+  //     final modelFile = File('${tempDir.path}/${fileName}.tflite');
+  //     await modelFile.writeAsBytes(
+  //       dataModelFile.buffer.asUint8List(dataModelFile.offsetInBytes, dataModelFile.lengthInBytes),
+  //       flush: true,
+  //     );
+  //
+  //     // Load interpreter from file path
+  //     // interpreter = await Interpreter.fromFile(modelFile);
+  //
+  //
+  //     // final interpreter1 = await Interpreter.fromAsset('mobilefacenet.tflite');
+  //
+  //
+  //     final gpuDelegateV2 = tfl.GpuDelegateV2(
+  //         options: tfl.GpuDelegateOptionsV2());
+  //
+  //     var interpreterOptions = tfl.InterpreterOptions()
+  //       ..addDelegate(gpuDelegateV2);
+  //     interpreter = await tfl.Interpreter.fromFile(modelFile,
+  //         options: interpreterOptions);
+  //
+  //
+  //     // sync json file emb.json from assets to temp directory
+  //     String _embPath = tempDir.path + '/emb.json';
+  //     jsonFile = new File(_embPath);
+  //     if (jsonFile.existsSync()) data = json.decode(jsonFile.readAsStringSync());
+  //
+  //   } on Exception {
+  //     debugPrint('Failed to load model.');
+  //   }
+  // }
 
-      String fileName = "mobilefacenet";
-      // String fileName = "face_detect_v1";
-      // Load model bytes from asset
-      final dataModelFile = await rootBundle.load('assets/${fileName}.tflite');
 
-      // Write them to a temporary file
-      final tempDir = await getApplicationDocumentsDirectory();
-      final modelFile = File('${tempDir.path}/${fileName}.tflite');
-      await modelFile.writeAsBytes(
-        dataModelFile.buffer.asUint8List(dataModelFile.offsetInBytes, dataModelFile.lengthInBytes),
-        flush: true,
-      );
-
-      // Load interpreter from file path
-      // interpreter = await Interpreter.fromFile(modelFile);
-
-
-      // final interpreter1 = await Interpreter.fromAsset('mobilefacenet.tflite');
-
-
-      final gpuDelegateV2 = tfl.GpuDelegateV2(
-          options: tfl.GpuDelegateOptionsV2());
-
-      var interpreterOptions = tfl.InterpreterOptions()
-        ..addDelegate(gpuDelegateV2);
-      interpreter = await tfl.Interpreter.fromFile(modelFile,
-          options: interpreterOptions);
-
-
-      // sync json file emb.json from assets to temp directory
-      String _embPath = tempDir.path + '/emb.json';
-      jsonFile = new File(_embPath);
-      if (jsonFile.existsSync()) data = json.decode(jsonFile.readAsStringSync());
-
-    } on Exception {
-      debugPrint('Failed to load model.');
-    }
+  Future<String?> detectPeopleByDB(imglib.Image img) {
+    // Convert image to Float32List input
+    // List<double> embedding = buildEmbeddingData(img);
+    // return compareWithDB(embedding);
+    return compareWithDB(img);
   }
 
-
-  String? detectPeopleByDB(imglib.Image img) {
+  Future<String?> detectPeopleByDBAndEmbedding(imglib.Image img) {
     // Convert image to Float32List input
-    List<double> embedding = buildEmbeddingData(img);
-    return compareWithDB(embedding);
-  }
-
-  String? detectPeopleByDBAndEmbedding(imglib.Image img, List<double> embedding) {
-    // Convert image to Float32List input
-    return compareWithDB(embedding);
+    return compareWithDB(img);
   }
 
   // List<double> buildEmbeddingData(imglib.Image img) {
@@ -322,6 +331,12 @@ class _HomePageState extends State<HomePage> {
     return embedding.map((e) => e / norm).toList();
   }
 
+  Uint8List convertImageToJpgBytes(imglib.Image image) {
+    // Encode the image as JPEG
+    List<int> jpg = imglib.encodeJpg(image, quality: 90); // quality: 0–100
+    return Uint8List.fromList(jpg);
+  }
+
   List<double> buildEmbeddingData(imglib.Image img) {
     var input = imageToByteListFloat32(img, 112, 128, 128);
     var inputTensor = input.reshape([1, 112, 112, 3]);
@@ -331,19 +346,26 @@ class _HomePageState extends State<HomePage> {
     return normalizeEmbedding(embedding); // Add normalization
   }
 
-  String? compareWithDB(List currEmb) {
+  Future<String?> compareWithDB(imglib.Image img) async{
     if (_dbPeoples.isEmpty) return null;
+
+    // convert img to jpg Uint8List
+    Uint8List imgBytes = convertImageToJpgBytes(img);
 
     final Map<String, double> mapMatchPeople = {};
 
     // Collect the smallest distance for each person (across their embeddings)
     for (People person in _dbPeoples) {
-      for (List<double> dbEmb in person.embeddings) {
-        // final double currDist = euclideanDistance(dbEmb, currEmb);
-        final double currDist = cosineDistance(dbEmb, currEmb);
-        if (currDist <= threshold) {
+      for (Uint8List dbEmb in person.images) {
+
+        var currDist = await isMatchFaceImages(
+            imgBytes,
+            dbEmb,
+            face_api.ImageType.PRINTED
+        );
+        if (currDist >= thresholdForFaceApi) {
           final prev = mapMatchPeople[person.id];
-          if (prev == null || currDist < prev) {
+          if (prev == null || currDist > prev) {
             mapMatchPeople[person.id] = currDist;
           }
         }
@@ -353,7 +375,7 @@ class _HomePageState extends State<HomePage> {
     if (mapMatchPeople.isEmpty) return null;
 
     // Find the entry with the minimum distance
-    final bestEntry = mapMatchPeople.entries.reduce((a, b) => a.value <= b.value ? a : b);
+    final bestEntry = mapMatchPeople.entries.reduce((a, b) => a.value >= b.value ? a : b);
 
     // Only return if confidence is high enough (distance < 0.25 = very confident)
     // if (bestEntry.value > 0.25) return null;
@@ -417,13 +439,13 @@ class _HomePageState extends State<HomePage> {
             imglib.Image croppedImage = imglib.copyCrop(
                 convertedImage, x: x.round(), y: y.round(),width:  w.round(), height:  h.round());
             faceCrops.add(croppedImage);
-            List<double> embeddingData = buildEmbeddingData(croppedImage);
-            String? peopleId = detectPeopleByDBAndEmbedding(croppedImage, embeddingData);
+            // List<double> embeddingData = buildEmbeddingData(croppedImage);
+            String? peopleId = await detectPeopleByDBAndEmbedding(croppedImage);
             debugPrint("Recognition Result: ${peopleId ?? "N/a"}");
             facePeoples.add(FacePeople(
                 dbId: peopleId,
                 faceRect: rect,
-                embedding: embeddingData,
+                embedding: [],
                 imagePath: imagePath
             ));
           }
@@ -444,6 +466,56 @@ class _HomePageState extends State<HomePage> {
       _isReloadingDb = false;
     });
 
+  }
+
+
+  // If 'assets/regula.license' exists, init using license(enables offline match)
+// otherwise init without license.
+  Future<bool> initialize() async {
+    await loadDbPeoples();
+    await _requestPermissions();
+    face_api.InitConfig? config = null;
+    try {
+      config = face_api.InitConfig(await rootBundle.load("assets/regula.license"));
+    } catch (_) {}
+    var (success, error) = await faceSdk.initialize(config: config);
+
+    if (error != null) {
+      print("${error.code}: ${error.message}");
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+    return success;
+  }
+
+  Future<double> matchFaces(face_api.MatchFacesImage? image1, face_api.MatchFacesImage? image2) async {
+    if (image1 == null || image2 == null) {
+      print("Both images are required for matching.");
+      return -1;
+    }
+
+    var request = face_api.MatchFacesRequest([image1!, image2!]);
+    var response = await faceSdk.matchFaces(request);
+    var split = await faceSdk.splitComparedFaces(response.results, 0.75);
+    var match = split.matchedFaces;
+    if (match.isNotEmpty) {
+      // setSimilarityStatus((match[0].similarity * 100).toStringAsFixed(2) + "%");
+      print("Faces matched with similarity: ${(match[0].similarity * 100).toStringAsFixed(2)}%");
+      if (match[0].similarity >= thresholdForFaceApi) {
+        return match[0].similarity;
+      }
+      return -1;
+    }
+    return -1;
+  }
+
+  Future<double> isMatchFaceImages(Uint8List bytes1, Uint8List bytes2, face_api.ImageType type) {
+    var image1 = face_api.MatchFacesImage(bytes1, type);
+    var image2 = face_api.MatchFacesImage(bytes2, type);
+
+    return matchFaces(image1, image2);
   }
 
   @override

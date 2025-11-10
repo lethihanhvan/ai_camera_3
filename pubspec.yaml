@@ -54,6 +54,8 @@ dependencies:
   excel: ^4.0.6
   heic_to_png_jpg: ^0.0.5
   file_picker: ^8.1.4
+  flutter_face_api: ^7.2.407
+  flutter_face_core_basic: ^7.2.407
 
 dev_dependencies:
   flutter_test:
