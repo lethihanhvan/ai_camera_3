@@ -113,7 +113,8 @@ class _HomePageState extends State<HomePage> {
   dynamic data = {};
   late List e1;
   // double threshold = 1.0;
-  double threshold = 0.3;
+  double threshold = 0.4;
+  int minSizeImage = 60;
   // Future<void> _openCamera() async {
   //   // Push CameraScreen and wait for the captured photo path
   //   final result = await Navigator.push(
@@ -345,6 +346,8 @@ class _HomePageState extends State<HomePage> {
           final prev = mapMatchPeople[person.id];
           if (prev == null || currDist < prev) {
             mapMatchPeople[person.id] = currDist;
+            // < threshold -> cunfg nguoi -> thoat
+            continue;
           }
         }
       }
@@ -408,7 +411,7 @@ class _HomePageState extends State<HomePage> {
           List<FacePeople> facePeoples = [];
           for (var rect in rects) {
             double x, y, w, h;
-            if (rect.width < 40 || rect.height < 40) continue;
+            if (rect.width < minSizeImage || rect.height < minSizeImage) continue;
 
             x = (rect.left - 10);
             y = (rect.top - 10);
