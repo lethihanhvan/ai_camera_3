@@ -281,6 +281,32 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
         selectedPerson = null;
         isSelectMode = false;
       }
+    } else {
+      // check image size, if small show alert message too small to create face id and return
+      final faceRect = widget.facePeoples[faceIndex!].faceRect;
+      var width = faceRect.width;
+      var height = faceRect.height;
+      var minSize = 200;
+      if (width < minSize || height < minSize) {
+        if (mounted) {
+          await showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text('Khuôn mặt quá nhỏ'),
+                content: Text('Khuôn mặt được phát hiện có kích thước quá nhỏ (${width.toInt()}x${height.toInt()}). Vui lòng sử dụng hình ảnh có khuôn mặt lớn hơn $minSize px để tạo nhận dạng.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            },
+          );
+        }
+        return;
+      }
     }
 
     // Get face image for preview
@@ -361,6 +387,8 @@ class _FaceImagePreviewState extends State<FaceImagePreview> {
         );
       }
     }
+
+    //
 
     await showDialog(
       context: context,
