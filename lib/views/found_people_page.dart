@@ -1,11 +1,13 @@
 import 'dart:io';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import 'package:syncfusion_flutter_xlsio/xlsio.dart' as xlsio;
+import 'package:image/image.dart' as img;
 
 import '../dto/people.dart';
-import 'exported_files_page.dart';
 
 class FoundPeoplePage extends StatelessWidget {
   final List<People> people;
@@ -43,16 +45,48 @@ class FoundPeoplePage extends StatelessWidget {
       final imgFile = File(imgPath);
       if (await imgFile.exists()) {
         final imgBytes = await imgFile.readAsBytes();
+
+        // Decode and re-encode as PNG to ensure compatibility
+        Uint8List? pngBytes;
+        try {
+          final decodedImage = img.decodeImage(imgBytes);
+          if (decodedImage != null) {
+            pngBytes = Uint8List.fromList(img.encodePng(decodedImage));
+          }
+        } catch (e) {
+          print('Error decoding image $i: $e');
+          pngBytes = imgBytes;
+        }
+
+        if (pngBytes == null) {
+          print('Skipping image $i - could not process');
+          continue;
+        }
+
         // Sheet name: use filename, truncate to 31 chars, remove invalid chars
         String baseName = imgPath.split('/').last;
         baseName = baseName.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
         if (baseName.length > 28) baseName = baseName.substring(0, 28); // leave room for index
         final sheetName = 'Img_${i+1}_$baseName';
         final imgSheet = workbook.worksheets.addWithName(sheetName);
-        // imgSheet.getRangeByName('A1').setText('Filename');
-        // imgSheet.getRangeByName('A2').setText(imgPath.split('/').last);
-        // Insert image at B2
-        imgSheet.pictures.addStream(2, 2, imgBytes); // row 2, col 2 (B2)
+        // Add label
+        imgSheet.getRangeByName('A1').setText('Ảnh nhận diện');
+        imgSheet.getRangeByName('A2').setText(imgPath.split('/').last);
+        imgSheet.getRangeByName('A3').setText('Kích thước: ${pngBytes.length} bytes');
+
+        try {
+          // Convert PNG bytes to base64 string
+          final base64Image = base64Encode(pngBytes);
+
+          // Insert image at row 2, column 2 (cell B2) using base64
+          final picture = imgSheet.pictures.addBase64(2, 2, base64Image);
+          picture.height = 300;
+          picture.width = 300;
+          print('Image ${i+1}: Added successfully (${pngBytes.length} bytes, base64: ${base64Image.length} chars)');
+        } catch (e) {
+          print('Error adding image $i to Excel: $e');
+          imgSheet.getRangeByName('B5').setText('Lỗi: $e');
+        }
       }
     }
 
